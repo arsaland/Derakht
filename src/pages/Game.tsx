@@ -168,21 +168,39 @@ export default function Game() {
             <div className="space-y-4">
               {gameState.sentences.map((text, i) => {
                 const player = gameState.players.find(p => p.sentenceIndices?.includes(i));
-                const isAIGenerated = i === 0; // First sentence is AI-generated
+                const isAIGenerated = i === 0 || gameState.aiSentenceIndices?.includes(i);
 
                 return (
                   <div
                     key={i}
                     className="flex gap-3 text-xl leading-relaxed items-start py-2"
                   >
-                    <span className="text-gray-400 whitespace-nowrap font-medium min-w-[100px] text-left">
+                    <span
+                      className={`
+                        whitespace-nowrap font-medium min-w-[100px] text-left
+                        ${isAIGenerated ? 'text-blue-400 font-bold' : 'text-gray-400'}
+                      `}
+                    >
                       {isAIGenerated ? "هوش‌یار:" : player?.name + ":"}
                     </span>
-                    <p className="flex-1">{text}</p>
+                    <p className="flex-1">
+                      {text}
+                    </p>
                   </div>
                 );
               })}
             </div>
+
+            {gameState.currentTurn === 'ai' && (
+              <div className="flex gap-3 text-xl leading-relaxed items-start py-2">
+                <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
+                  هوش‌یار:
+                </span>
+                <p className="flex-1 text-gray-400 animate-pulse">
+                  در حال نوشتن...
+                </p>
+              </div>
+            )}
 
             {gameState.isProcessing && (
               <p className="text-xl opacity-60 animate-pulse">
