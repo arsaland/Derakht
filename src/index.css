@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Vazirmatn', system-ui, sans-serif;
+  direction: rtl;
+  background-color: black;
+  color: white;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 18px;
+  }
+}
+
+input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 0.75rem 0;
+  width: 100%;
+  margin: 0.75rem 0;
+  font-size: 1.125rem;
+}
+
+input:focus {
+  outline: none;
+  border-bottom-color: white;
+}
+
+.link {
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.125rem;
+  padding: 0.5rem;
+  transition: all 0.2s;
+}
+
+.link:hover {
+  color: white;
+}
+
+.active {
+  color: white;
+}
