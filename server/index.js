@@ -41,7 +41,8 @@ io.on('connection', (socket) => {
       players: [{
         id: socket.id,
         name: playerName,
-        isHost: true
+        isHost: true,
+        sentenceIndices: []
       }],
       currentTurn: '',
       sentences: [],
@@ -68,7 +69,8 @@ io.on('connection', (socket) => {
     game.players.push({
       id: socket.id,
       name: playerName,
-      isHost: false
+      isHost: false,
+      sentenceIndices: []
     });
 
     socket.join(roomId);
@@ -98,6 +100,14 @@ io.on('connection', (socket) => {
   socket.on('submitSentence', async ({ roomId, sentence }) => {
     const game = games.get(roomId);
     if (!game || game.currentTurn !== socket.id) return;
+
+    const currentPlayer = game.players.find(p => p.id === game.currentTurn);
+    if (currentPlayer) {
+      currentPlayer.sentenceIndices = [
+        ...(currentPlayer.sentenceIndices || []),
+        game.sentences.length
+      ];
+    }
 
     game.sentences.push(sentence);
 
