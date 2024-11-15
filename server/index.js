@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { generateFinalStory, generateOpeningSentence } from './openai.js';
+import { generateFinalStory, generateOpeningSentence, generateContinuationSentence } from './openai.js';
 import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -50,7 +50,8 @@ io.on('connection', (socket) => {
       showRoundTransition: false,
       isProcessing: false,
       finalStory: '',
-      showFinalStory: false
+      showFinalStory: false,
+      aiSentenceIndices: [0]
     };
 
     games.set(roomId, gameState);
@@ -121,16 +122,23 @@ io.on('connection', (socket) => {
     if (isRoundComplete && game.round < ROUNDS) {
       game.round++;
       game.showRoundTransition = true;
+      game.isProcessing = true;
       io.to(roomId).emit('gameState', { ...game });
 
-      setTimeout(() => {
-        game.showRoundTransition = false;
-        io.to(roomId).emit('gameState', { ...game });
-      }, 2000);
+      // Generate AI continuation sentence
+      const aiSentence = await generateContinuationSentence(game.sentences);
+      game.sentences.push(aiSentence);
+      game.aiSentenceIndices = [...(game.aiSentenceIndices || []), game.sentences.length - 1];
+      game.isProcessing = false;
+      game.showRoundTransition = false;
+
+      // Set turn to first player after AI's sentence
+      game.currentTurn = game.players[0].id;
+      io.to(roomId).emit('gameState', { ...game });
     }
 
     // Check if game is complete
-    if (game.sentences.length === (ROUNDS * game.players.length) + 1) {
+    if (game.sentences.length === (ROUNDS * game.players.length) + ROUNDS) {
       game.isProcessing = true;
       io.to(roomId).emit('gameState', { ...game });
 

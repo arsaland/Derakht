@@ -63,3 +63,28 @@ export async function generateOpeningSentence(theme) {
     return 'یک روز صبح...';
   }
 }
+
+export async function generateContinuationSentence(sentences) {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a creative storyteller. Based on the previous sentences, generate a single engaging sentence in Persian (Farsi) that continues the story naturally. Match the tone and style of the previous sentences. Keep the sentence concise but meaningful."
+        },
+        {
+          role: "user",
+          content: `Previous sentences:\n${sentences.join("\n")}\n\nGenerate one sentence to continue this story:`
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: 100
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    return 'و داستان ادامه یافت...';
+  }
+}
