@@ -13,6 +13,14 @@ export function AnimatedSentence({ text, className = "" }: AnimatedSentenceProps
         setWords(text.split(/\s+/));
     }, [text]);
 
+    const container = {
+        hidden: { opacity: 0 },
+        visible: (i = 1) => ({
+            opacity: 1,
+            transition: { staggerChildren: 0.12 },
+        }),
+    };
+
     return (
         <motion.p
             className={`flex-1 ${className}`}

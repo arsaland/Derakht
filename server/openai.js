@@ -106,3 +106,23 @@ export async function generateStoryImage(story) {
     return null;
   }
 }
+
+export async function generateStoryAudio(story) {
+  try {
+    const response = await openai.audio.speech.create({
+      model: "tts-1",
+      voice: "onyx",
+      input: story,
+      speed: 1.0,
+      response_format: "mp3"
+    });
+
+    // Convert the response to base64
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const base64Audio = buffer.toString('base64');
+    return `data:audio/mp3;base64,${base64Audio}`;
+  } catch (error) {
+    console.error('TTS API error:', error);
+    return null;
+  }
+}

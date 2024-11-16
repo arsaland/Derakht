@@ -32,17 +32,16 @@ export function GameRoom({ story, playerId, onSubmitSentence }: GameRoomProps) {
           {story.sentences.map((text, index) => (
             <p
               key={index}
-              className={`text-lg leading-relaxed ${
-                index === 0 ? 'text-gray-400' : 'text-white'
-              }`}
+              className={`text-lg leading-relaxed ${index === 0 ? 'text-gray-400' : 'text-white'
+                }`}
             >
               {text}
             </p>
           ))}
-          
+
           {story.isProcessing && (
             <p className="text-gray-400 animate-pulse">
-              هوش مصنوعی در حال پردازش داستان است...
+              هوش‌یار در حال پردازش داستان است...
             </p>
           )}
         </div>
