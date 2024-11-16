@@ -159,6 +159,7 @@ export default function Game() {
       <FinalStory
         show={gameState.showFinalStory}
         story={gameState.finalStory}
+        storyImage={gameState.storyImage}
       />
 
       <div className="min-h-screen flex flex-col">

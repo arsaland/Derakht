@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { generateFinalStory, generateOpeningSentence, generateContinuationSentence } from './openai.js';
+import { generateFinalStory, generateOpeningSentence, generateContinuationSentence, generateStoryImage } from './openai.js';
 import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -122,9 +122,16 @@ io.on('connection', (socket) => {
 
     game.sentences.push(sentence);
 
-    const currentPlayerIndex = game.players.findIndex(p => p.id === socket.id);
-    const nextPlayerIndex = (currentPlayerIndex + 1) % game.players.length;
-    game.currentTurn = game.players[nextPlayerIndex].id;
+    // Calculate next turn
+    if (game.players.length === 2) {
+      // For 2 players, alternate between them
+      game.currentTurn = game.players.find(p => p.id !== socket.id)?.id;
+    } else {
+      // For more than 2 players, use the original rotation logic
+      const currentPlayerIndex = game.players.findIndex(p => p.id === socket.id);
+      const nextPlayerIndex = (currentPlayerIndex + 1) % game.players.length;
+      game.currentTurn = game.players[nextPlayerIndex].id;
+    }
 
     const sentencesInCurrentRound = (game.sentences.length - 1) % game.players.length;
     const isRoundComplete = sentencesInCurrentRound === 0;
@@ -164,8 +171,13 @@ io.on('connection', (socket) => {
 
       // Generate final story
       const finalStory = await generateFinalStory(game.sentences);
+
+      // Generate story image
+      const storyImage = await generateStoryImage(finalStory);
+
       game.isProcessing = false;
       game.finalStory = finalStory;
+      game.storyImage = storyImage;
       game.showFinalStory = true;
     }
 
