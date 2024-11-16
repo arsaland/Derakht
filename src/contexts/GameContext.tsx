@@ -12,6 +12,7 @@ interface GameState {
   sentences: string[];
   isProcessing: boolean;
   theme?: string;
+  typingPlayer?: string;
 }
 
 interface GameContextType {
