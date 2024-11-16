@@ -43,9 +43,10 @@ export default function Join() {
           <input
             type="text"
             value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
+            onChange={(e) => setRoomId(e.target.value.toUpperCase())}
             placeholder="کد اتاق"
-            className="text-xl"
+            className="text-xl uppercase"
+            maxLength={4}
           />
         </div>
 
@@ -57,7 +58,7 @@ export default function Join() {
           >
             پیوستن به بازی
           </button>
-          
+
           <button
             type="button"
             onClick={() => navigate('/')}

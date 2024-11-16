@@ -19,14 +19,14 @@ export default function Home() {
           className="block text-2xl py-4 px-8 text-black bg-white hover:bg-gray-100 
                      transition-colors duration-200 rounded-lg"
         >
-          میزبانی بازی
+          میزبان
         </Link>
         <Link
           to="/join"
           className="block text-xl py-3 px-6 text-white/60 hover:text-white 
                      transition-colors duration-200"
         >
-          پیوستن به بازی
+          مهمان
         </Link>
       </nav>
     </div>
