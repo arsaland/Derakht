@@ -10,7 +10,7 @@ const textConfigs = [
   },
   {
     text: 'لحظه‌ای که می‌گذرد همان لحظه‌ای است که می‌آید و لحظه‌ای که می‌آید همان است،',
-    speed: 46,
+    speed: 80,
     yPosition: 20,
     direction: 'rtl',
   },
@@ -31,14 +31,15 @@ export function BackgroundText() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const createRepeatingText = (text: string) => {
-    return Array(20).fill(text).join(' ');
+  const createRepeatingText = (text: string, direction: 'ltr' | 'rtl') => {
+    const repetitions = direction === 'rtl' ? 30 : 20;
+    return Array(repetitions).fill(text).join(' ');
   };
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {textConfigs.map((config, index) => {
-        const repeatedText = createRepeatingText(config.text);
+        const repeatedText = createRepeatingText(config.text, config.direction);
 
         return (
           <div
@@ -47,8 +48,8 @@ export function BackgroundText() {
             style={{
               top: `${config.yPosition}%`,
               ...(config.direction === 'rtl'
-                ? { right: '-200vw' }  // Changed positioning for RTL
-                : { left: '-100vw' }), // Kept original for LTR
+                ? { right: '-1500vw' }
+                : { left: '-100vw' }),
             }}
           >
             <motion.div
