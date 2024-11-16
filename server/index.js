@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { generateFinalStory, generateOpeningSentence, generateContinuationSentence, generateStoryImage } from './openai.js';
+import { generateFinalStory, generateOpeningSentence, generateContinuationSentence, generateStoryImage, generateStoryAudio } from './openai.js';
 import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -127,10 +127,12 @@ io.on('connection', (socket) => {
       // For 2 players, alternate between them
       game.currentTurn = game.players.find(p => p.id !== socket.id)?.id;
     } else {
-      // For more than 2 players, use the original rotation logic
-      const currentPlayerIndex = game.players.findIndex(p => p.id === socket.id);
-      const nextPlayerIndex = (currentPlayerIndex + 1) % game.players.length;
-      game.currentTurn = game.players[nextPlayerIndex].id;
+      // For more than 2 players, ensure proper rotation
+      const currentIndex = game.players.findIndex(p => p.id === socket.id);
+      const totalPlayers = game.players.length;
+      const sentencesInRound = (game.sentences.length - 1) % totalPlayers;
+      const nextIndex = (sentencesInRound + 1) % totalPlayers;
+      game.currentTurn = game.players[nextIndex].id;
     }
 
     const sentencesInCurrentRound = (game.sentences.length - 1) % game.players.length;
@@ -175,10 +177,17 @@ io.on('connection', (socket) => {
       // Generate story image
       const storyImage = await generateStoryImage(finalStory);
 
+      // Generate audio narration
+      const storyAudio = await generateStoryAudio(finalStory);
+
       game.isProcessing = false;
       game.finalStory = finalStory;
       game.storyImage = storyImage;
+      game.storyAudio = storyAudio;
       game.showFinalStory = true;
+
+      // Add this line to emit the final state
+      io.to(roomId).emit('gameState', { ...game });
     }
 
     io.to(roomId).emit('gameState', { ...game });

@@ -160,6 +160,7 @@ export default function Game() {
         show={gameState.showFinalStory}
         story={gameState.finalStory}
         storyImage={gameState.storyImage}
+        storyAudio={gameState.storyAudio}
       />
 
       <div className="min-h-screen flex flex-col">
