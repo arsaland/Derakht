@@ -47,7 +47,11 @@ io.on('connection', (socket) => {
         id: socket.id,
         name: playerName,
         isHost: true,
-        sentenceIndices: []
+        sentenceIndices: [],
+        features: {
+          tts: false,
+          images: false
+        }
       }],
       currentTurn: '',
       sentences: [],
@@ -86,7 +90,11 @@ io.on('connection', (socket) => {
       id: socket.id,
       name: playerName,
       isHost: false,
-      sentenceIndices: []
+      sentenceIndices: [],
+      features: {
+        tts: false,
+        images: false
+      }
     });
 
     socket.join(actualRoomId);
@@ -126,7 +134,11 @@ io.on('connection', (socket) => {
 
   socket.on('submitSentence', async ({ roomId, sentence }) => {
     const game = games.get(roomId);
-    if (!game || game.currentTurn !== socket.id) return;
+    if (!game) return;
+
+    // Clear typing state immediately
+    game.typingPlayer = null;
+    io.to(roomId).emit('gameState', { ...game });
 
     const currentPlayer = game.players.find(p => p.id === game.currentTurn);
     if (currentPlayer) {
@@ -227,6 +239,20 @@ io.on('connection', (socket) => {
     if (!game || game.typingPlayer !== socket.id) return;
 
     game.typingPlayer = null;
+    io.to(roomId).emit('gameState', { ...game });
+  });
+
+  socket.on('toggleFeature', ({ roomId, feature, enabled }) => {
+    const game = games.get(roomId);
+    if (!game) return;
+
+    // Update the feature flag
+    game.features = {
+      ...game.features,
+      [feature]: enabled
+    };
+
+    // Broadcast the updated game state
     io.to(roomId).emit('gameState', { ...game });
   });
 });

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSocket } from '../contexts/SocketContext';
 import { useGame } from '../contexts/GameContext';
-import { Share2, Copy, Send } from 'lucide-react';
+import { TreePine, Copy, Send, Share2 } from 'lucide-react';
 import { RoundTransition } from '../components/RoundTransition';
 import { FinalStory } from '../components/FinalStory';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,24 @@ const debouncedTypingStart = debounce((socket, roomId) => {
 const debouncedTypingEnd = debounce((socket, roomId) => {
   socket.emit('stopTyping', { roomId });
 }, 1000);
+
+interface ToggleProps {
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+  label: string;
+}
+
+export function Toggle({ enabled, onChange, label }: ToggleProps) {
+  return (
+    <button
+      onClick={() => onChange(!enabled)}
+      className={`flex items-center justify-between w-full p-4 rounded-lg border-2 transition-colors
+        ${enabled ? 'border-white bg-white/10' : 'border-white/10 hover:border-white/30'}`}
+    >
+      <span className="text-lg">{label}</span>
+    </button>
+  );
+}
 
 export default function Game() {
   const { roomId } = useParams();

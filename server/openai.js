@@ -38,35 +38,21 @@ export async function generateFinalStory(sentences) {
 }
 
 export async function generateOpeningSentence(theme) {
-  try {
-    const prompts = {
-      'دلنشین': 'یک جمله‌ی کوتاه و دلنشین به فرسی بنویس که شروع یک داستان گرم و صمیمی باشد',
-      'ماجراجویی': 'یک جمله‌ی کوتاه و هیجان‌انگیز به فارسی بنویس که شروع یک داستان ماجراجویی باشد',
-      'رازآلود': 'یک جمله‌ی کوتاه و مرموز به فارسی بنویس که شروع یک داستان رازآلود باشد',
-      'ترسناک': 'یک جمله‌ی کوتاه و دلهره‌آور به فارسی بنویس که شروع یک داستان ترسناک باشد'
-    };
+  const prompt = `یک جمله‌ی فارسی برای شروع یک داستان ${theme} بنویس.
+  قوانین:
+  - فقط یک جمله‌ی کامل بنویس
+  - جمله باید حداکثر ۱۲۰ کاراکتر باشد
+  - جمله باید جذاب و گیرا باشد
+  - جمله باید در یک نقطه‌ی طبیعی تمام شود`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are a creative storyteller. Write a single opening sentence in Persian (Farsi) based on the given theme."
-        },
-        {
-          role: "user",
-          content: prompts[theme]
-        }
-      ],
-      temperature: 0.8,
-      max_tokens: 100
-    });
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+    max_tokens: 100,
+  });
 
-    return response.choices[0].message.content;
-  } catch (error) {
-    console.error('OpenAI API error:', error);
-    return 'یک روز صبح...';
-  }
+  return response.choices[0].message.content.trim();
 }
 
 export async function generateContinuationSentence(sentences) {
@@ -94,8 +80,8 @@ export async function generateContinuationSentence(sentences) {
   }
 }
 
-export async function generateStoryImage(story) {
-  if (!FEATURES.images) {
+export async function generateStoryImage(story, features) {
+  if (!features.images) {
     return null;
   }
 
@@ -116,8 +102,8 @@ export async function generateStoryImage(story) {
   }
 }
 
-export async function generateStoryAudio(story) {
-  if (!FEATURES.tts) {
+export async function generateStoryAudio(story, features) {
+  if (!features.tts) {
     return null;
   }
 
@@ -136,4 +122,23 @@ export async function generateStoryAudio(story) {
     console.error('TTS API error:', error);
     return null;
   }
+}
+
+export async function generateNextSentence(story, theme) {
+  const prompt = `این داستان ${theme} را با یک جمله‌ی فارسی ادامه بده.
+  داستان قبلی: ${story}
+  قوانین:
+  - فقط یک جمله‌ی کامل بنویس
+  - جمله باید حداکثر ۱۲۰ کاراکتر باشد
+  - جمله باید به‌طور طبیعی با متن قبلی مرتبط باشد
+  - جمله باید داستان را در جهت جذاب‌تری پیش ببرد`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+    max_tokens: 100,
+  });
+
+  return response.choices[0].message.content.trim();
 }
