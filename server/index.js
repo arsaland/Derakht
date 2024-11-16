@@ -33,6 +33,8 @@ if (process.env.NODE_ENV === 'production') {
 
 const games = new Map();
 const ROUNDS = 4;
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 8;
 
 io.on('connection', (socket) => {
   socket.on('createGame', ({ playerName }, callback) => {
@@ -65,15 +67,18 @@ io.on('connection', (socket) => {
 
   socket.on('joinGame', ({ playerName, roomId }, callback) => {
     const normalizedRoomId = roomId.toUpperCase();
-
     const actualRoomId = Array.from(games.keys()).find(
       key => key.toUpperCase() === normalizedRoomId
     );
-
     const game = actualRoomId ? games.get(actualRoomId) : null;
 
     if (!game) {
-      callback({ success: false });
+      callback({ success: false, error: 'Game not found' });
+      return;
+    }
+
+    if (game.players.length >= MAX_PLAYERS) {
+      callback({ success: false, error: 'Game is full' });
       return;
     }
 
@@ -93,17 +98,28 @@ io.on('connection', (socket) => {
     const game = games.get(roomId);
     if (!game || !game.theme) return;
 
+    if (game.players.length < MIN_PLAYERS) {
+      io.to(roomId).emit('gameError', 'Need at least 2 players to start');
+      return;
+    }
+
+    if (game.players.length > MAX_PLAYERS) {
+      io.to(roomId).emit('gameError', 'Maximum 8 players allowed');
+      return;
+    }
+
     game.round = 1;
     game.showRoundTransition = true;
+    game.currentTurn = 'ai';
     io.to(roomId).emit('gameState', { ...game });
 
-    // Generate opening sentence based on theme
+    // Generate opening sentence
     const openingSentence = await generateOpeningSentence(game.theme);
 
     setTimeout(() => {
       game.showRoundTransition = false;
-      game.currentTurn = game.players[0].id;
       game.sentences = [openingSentence];
+      game.currentTurn = game.players[0].id;
       io.to(roomId).emit('gameState', { ...game });
     }, 2000);
   });
@@ -122,72 +138,51 @@ io.on('connection', (socket) => {
 
     game.sentences.push(sentence);
 
-    // Calculate next turn
-    if (game.players.length === 2) {
-      // For 2 players, alternate between them
-      game.currentTurn = game.players.find(p => p.id !== socket.id)?.id;
+    // Find current player's index
+    const currentPlayerIndex = game.players.findIndex(p => p.id === socket.id);
+
+    // If this was the last player in the round
+    if (currentPlayerIndex === game.players.length - 1) {
+      if (game.round < ROUNDS) {
+        // Start next round
+        game.round++;
+        game.showRoundTransition = true;
+        io.to(roomId).emit('gameState', { ...game });
+
+        // Wait for round transition
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // AI's turn
+        game.showRoundTransition = false;
+        game.currentTurn = 'ai';
+        io.to(roomId).emit('gameState', { ...game });
+
+        // Generate AI sentence
+        const aiSentence = await generateContinuationSentence(game.sentences);
+        game.sentences.push(aiSentence);
+        game.aiSentenceIndices = [...(game.aiSentenceIndices || []), game.sentences.length - 1];
+
+        // Move to first player
+        game.currentTurn = game.players[0].id;
+      } else {
+        // Final round complete, generate ending
+        game.isProcessing = true;
+        io.to(roomId).emit('gameState', { ...game });
+
+        const finalStory = await generateFinalStory(game.sentences);
+        const storyImage = await generateStoryImage(finalStory);
+        const storyAudio = await generateStoryAudio(finalStory);
+
+        game.isProcessing = false;
+        game.finalStory = finalStory;
+        game.storyImage = storyImage;
+        game.storyAudio = storyAudio;
+        game.showFinalStory = true;
+        game.currentTurn = '';
+      }
     } else {
-      // For more than 2 players, ensure proper rotation
-      const currentIndex = game.players.findIndex(p => p.id === socket.id);
-      const totalPlayers = game.players.length;
-      const sentencesInRound = (game.sentences.length - 1) % totalPlayers;
-      const nextIndex = (sentencesInRound + 1) % totalPlayers;
-      game.currentTurn = game.players[nextIndex].id;
-    }
-
-    const sentencesInCurrentRound = (game.sentences.length - 1) % game.players.length;
-    const isRoundComplete = sentencesInCurrentRound === 0;
-
-    if (isRoundComplete && game.round < ROUNDS) {
-      game.round++;
-      game.showRoundTransition = true;
-
-      // Show round transition first
-      io.to(roomId).emit('gameState', { ...game });
-
-      // Wait for round transition
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Start AI turn
-      game.showRoundTransition = false;
-      game.currentTurn = 'ai';
-      io.to(roomId).emit('gameState', { ...game });
-
-      // Simulate AI typing time
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Generate and add AI sentence
-      const aiSentence = await generateContinuationSentence(game.sentences);
-      game.sentences.push(aiSentence);
-      game.aiSentenceIndices = [...(game.aiSentenceIndices || []), game.sentences.length - 1];
-
       // Move to next player
-      game.currentTurn = game.players[0].id;
-      io.to(roomId).emit('gameState', { ...game });
-    }
-
-    // Check if game is complete
-    if (game.sentences.length === (ROUNDS * game.players.length) + ROUNDS) {
-      game.isProcessing = true;
-      io.to(roomId).emit('gameState', { ...game });
-
-      // Generate final story
-      const finalStory = await generateFinalStory(game.sentences);
-
-      // Generate story image
-      const storyImage = await generateStoryImage(finalStory);
-
-      // Generate audio narration
-      const storyAudio = await generateStoryAudio(finalStory);
-
-      game.isProcessing = false;
-      game.finalStory = finalStory;
-      game.storyImage = storyImage;
-      game.storyAudio = storyAudio;
-      game.showFinalStory = true;
-
-      // Add this line to emit the final state
-      io.to(roomId).emit('gameState', { ...game });
+      game.currentTurn = game.players[currentPlayerIndex + 1].id;
     }
 
     io.to(roomId).emit('gameState', { ...game });

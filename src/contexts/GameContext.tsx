@@ -26,7 +26,8 @@ const GameContext = createContext<GameContextType>({
     players: [],
     currentTurn: '',
     sentences: [],
-    isProcessing: false
+    isProcessing: false,
+    theme: ''
   },
   setGameState: () => { },
   playerName: '',
@@ -38,7 +39,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     players: [],
     currentTurn: '',
     sentences: [],
-    isProcessing: false
+    isProcessing: false,
+    theme: ''
   });
   const [playerName, setPlayerName] = useState('');
 
