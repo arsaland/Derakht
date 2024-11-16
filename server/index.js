@@ -136,68 +136,71 @@ io.on('connection', (socket) => {
     const game = games.get(roomId);
     if (!game) return;
 
-    // Clear typing state immediately
-    game.typingPlayer = null;
-    io.to(roomId).emit('gameState', { ...game });
-
-    const currentPlayer = game.players.find(p => p.id === game.currentTurn);
-    if (currentPlayer) {
-      currentPlayer.sentenceIndices = [
-        ...(currentPlayer.sentenceIndices || []),
-        game.sentences.length
-      ];
+    // Check if it's actually this player's turn
+    if (game.currentTurn !== socket.id) {
+      return;
     }
 
-    game.sentences.push(sentence);
+    try {
+      // Clear any lingering typing state
+      game.typingPlayer = null;
 
-    // Find current player's index
-    const currentPlayerIndex = game.players.findIndex(p => p.id === socket.id);
-
-    // If this was the last player in the round
-    if (currentPlayerIndex === game.players.length - 1) {
-      if (game.round < ROUNDS) {
-        // Start next round
-        game.round++;
-        game.showRoundTransition = true;
-        io.to(roomId).emit('gameState', { ...game });
-
-        // Wait for round transition
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // AI's turn
-        game.showRoundTransition = false;
-        game.currentTurn = 'ai';
-        io.to(roomId).emit('gameState', { ...game });
-
-        // Generate AI sentence
-        const aiSentence = await generateContinuationSentence(game.sentences);
-        game.sentences.push(aiSentence);
-        game.aiSentenceIndices = [...(game.aiSentenceIndices || []), game.sentences.length - 1];
-
-        // Move to first player
-        game.currentTurn = game.players[0].id;
-      } else {
-        // Final round complete, generate ending
-        game.isProcessing = true;
-        io.to(roomId).emit('gameState', { ...game });
-
-        const finalStory = await generateFinalStory(game.sentences);
-        const storyImage = await generateStoryImage(finalStory);
-        const storyAudio = await generateStoryAudio(finalStory);
-
-        game.isProcessing = false;
-        game.finalStory = finalStory;
-        game.storyImage = storyImage;
-        game.storyAudio = storyAudio;
-        game.showFinalStory = true;
-        game.currentTurn = '';
+      const currentPlayer = game.players.find(p => p.id === game.currentTurn);
+      if (currentPlayer) {
+        currentPlayer.sentenceIndices = [
+          ...(currentPlayer.sentenceIndices || []),
+          game.sentences.length
+        ];
       }
-    } else {
-      // Move to next player
-      game.currentTurn = game.players[currentPlayerIndex + 1].id;
-    }
 
-    io.to(roomId).emit('gameState', { ...game });
+      game.sentences.push(sentence);
+
+      // Find current player's index
+      const currentPlayerIndex = game.players.findIndex(p => p.id === socket.id);
+
+      // If this was the last player in the round
+      if (currentPlayerIndex === game.players.length - 1) {
+        if (game.round < ROUNDS) {
+          // Start next round
+          game.round++;
+          game.showRoundTransition = true;
+          game.typingPlayer = null; // Clear typing state before transition
+          io.to(roomId).emit('gameState', { ...game });
+
+          // Wait for round transition
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          // AI's turn
+          game.showRoundTransition = false;
+          game.currentTurn = 'ai';
+          game.typingPlayer = null; // Ensure typing state is clear
+          io.to(roomId).emit('gameState', { ...game });
+
+          // Generate AI's sentence
+          const aiSentence = await generateContinuationSentence(game.sentences);
+          game.sentences.push(aiSentence);
+          game.aiSentenceIndices = [...(game.aiSentenceIndices || []), game.sentences.length - 1];
+
+          // Move to first player
+          game.currentTurn = game.players[0].id;
+          game.typingPlayer = null; // Clear typing state before next player
+          io.to(roomId).emit('gameState', { ...game });
+        } else {
+          // Final round complete
+          game.isProcessing = true;
+          game.typingPlayer = null; // Clear typing state
+          io.to(roomId).emit('gameState', { ...game });
+        }
+      } else {
+        // Move to next player
+        game.currentTurn = game.players[currentPlayerIndex + 1].id;
+        io.to(roomId).emit('gameState', { ...game });
+      }
+    } catch (error) {
+      console.error('Error processing sentence:', error);
+      game.typingPlayer = null;
+      io.to(roomId).emit('gameState', { ...game });
+    }
   });
 
   socket.on('disconnect', () => {
@@ -216,6 +219,14 @@ io.on('connection', (socket) => {
         }
       }
     });
+
+    // Find any game where this player was typing
+    for (const [roomId, game] of games.entries()) {
+      if (game.typingPlayer === socket.id) {
+        game.typingPlayer = null;
+        io.to(roomId).emit('gameState', { ...game });
+      }
+    }
   });
 
   socket.on('selectTheme', ({ roomId, theme }) => {
@@ -254,6 +265,16 @@ io.on('connection', (socket) => {
 
     // Broadcast the updated game state
     io.to(roomId).emit('gameState', { ...game });
+  });
+
+  socket.on('typing:end', ({ roomId }) => {
+    const game = games.get(roomId);
+    if (!game) return;
+
+    if (game.typingPlayer === socket.id) {
+      game.typingPlayer = null;
+      io.to(roomId).emit('gameState', { ...game });
+    }
   });
 });
 

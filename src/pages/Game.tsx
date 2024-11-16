@@ -16,7 +16,7 @@ const debouncedTypingStart = debounce((socket, roomId) => {
 
 const debouncedTypingEnd = debounce((socket, roomId) => {
   socket.emit('stopTyping', { roomId });
-}, 1000);
+}, 100);
 
 interface ToggleProps {
   enabled: boolean;
@@ -60,10 +60,16 @@ export default function Game() {
     };
   }, [socket, playerName, navigate, roomId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitSentence = (e: React.FormEvent) => {
     e.preventDefault();
     if (!socket || !sentence.trim()) return;
-    socket.emit('submitSentence', { roomId, sentence });
+
+    // Clear typing state before submitting
+    debouncedTypingEnd.cancel();
+    socket.emit('stopTyping', { roomId });
+
+    // Submit the sentence
+    socket.emit('submitSentence', { roomId, sentence: sentence.trim() });
     setSentence('');
   };
 
@@ -113,6 +119,17 @@ export default function Game() {
     if (!socket) return;
     debouncedTypingEnd(socket, roomId);
   };
+
+  // Add cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        socket.emit('typing:end', { roomId });
+        debouncedTypingStart.cancel();
+        debouncedTypingEnd.cancel();
+      }
+    };
+  }, [socket, roomId]);
 
   if (!gameStarted) {
     return (
@@ -270,7 +287,7 @@ export default function Game() {
 
         {isMyTurn && !gameState.isProcessing && !gameState.showFinalStory && (
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmitSentence}
             className="fixed bottom-0 right-0 left-0 p-4 bg-black/90 backdrop-blur border-t border-white/10"
           >
             <div className="max-w-2xl mx-auto flex gap-3">

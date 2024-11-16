@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 
 interface Story {
@@ -17,10 +17,19 @@ export function GameRoom({ story, playerId, onSubmitSentence }: GameRoomProps) {
   const [sentence, setSentence] = useState('');
   const isPlayerTurn = story.currentTurn === playerId;
 
+  useEffect(() => {
+    // Clear typing state when component unmounts or when turn changes
+    return () => {
+      handleTypingEnd();
+    };
+  }, [isPlayerTurn]); // Also clear when turn changes
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (sentence.trim() && isPlayerTurn) {
-      handleTypingEnd();
+      handleTypingEnd(); // Clear typing state
+      debouncedTypingStart.cancel(); // Cancel any pending typing indicators
+      debouncedTypingEnd.cancel();
       onSubmitSentence(sentence.trim());
       setSentence('');
     }
