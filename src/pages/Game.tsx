@@ -248,17 +248,8 @@ export default function Game() {
       />
 
       <div className="min-h-screen flex flex-col">
-        <div className="flex-1 p-6 pb-32 overflow-auto">
+        <div className="flex-1 p-6 pb-40 overflow-auto">
           <div className="max-w-2xl mx-auto space-y-6">
-            <div className="flex items-center justify-between opacity-60 text-lg">
-              <span>اتاق: {roomId}</span>
-              <span>نوبت: {
-                gameState.currentTurn === 'ai'
-                  ? 'هوش‌یار'
-                  : gameState.players.find(p => p.id === gameState.currentTurn)?.name
-              }</span>
-            </div>
-
             <div className="space-y-4">
               {gameState.sentences.map((text, i) => {
                 const player = gameState.players.find(p => p.sentenceIndices?.includes(i));
@@ -313,34 +304,45 @@ export default function Game() {
           </div>
         </div>
 
-        {isMyTurn && !gameState.isProcessing && !gameState.showFinalStory && (
-          <form
-            onSubmit={handleSubmitSentence}
-            className="fixed bottom-0 right-0 left-0 p-4 bg-black/90 backdrop-blur border-t border-white/10"
-          >
-            <div className="max-w-2xl mx-auto flex gap-3">
-              <input
-                value={sentence}
-                onChange={(e) => {
-                  setSentence(e.target.value);
-                  handleTypingStart();
-                }}
-                onBlur={handleTypingEnd}
-                placeholder="جمله‌ی خود را بنویسید..."
-                className="flex-1 bg-white/5 rounded-lg px-4 py-3 text-lg"
-                autoFocus
-              />
-              <button
-                type="submit"
-                disabled={!sentence.trim()}
-                className="p-3 text-white rounded-lg transition-opacity
-                         disabled:opacity-30 enabled:hover:opacity-80"
-              >
-                <Send size={28} />
-              </button>
-            </div>
-          </form>
-        )}
+        <div className="fixed bottom-0 right-0 left-0">
+          <div className="flex items-center justify-between px-4 py-2 text-sm opacity-60 bg-black/50 backdrop-blur border-t border-white/5">
+            <span>اتاق: {roomId}</span>
+            <span>نوبت: {
+              gameState.currentTurn === 'ai'
+                ? 'هوش‌یار'
+                : gameState.players.find(p => p.id === gameState.currentTurn)?.name
+            }</span>
+          </div>
+
+          {isMyTurn && !gameState.isProcessing && !gameState.showFinalStory && (
+            <form
+              onSubmit={handleSubmitSentence}
+              className="p-4 bg-black/90 backdrop-blur border-t border-white/10"
+            >
+              <div className="max-w-2xl mx-auto flex gap-3">
+                <input
+                  value={sentence}
+                  onChange={(e) => {
+                    setSentence(e.target.value);
+                    handleTypingStart();
+                  }}
+                  onBlur={handleTypingEnd}
+                  placeholder="جمله‌ی خود را بنویسید..."
+                  className="flex-1 bg-white/5 rounded-lg px-4 py-3 text-lg"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={!sentence.trim()}
+                  className="p-3 text-white rounded-lg transition-opacity
+                           disabled:opacity-30 enabled:hover:opacity-80"
+                >
+                  <Send size={28} />
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </>
   );
