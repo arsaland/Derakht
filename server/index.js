@@ -213,6 +213,22 @@ io.on('connection', (socket) => {
     game.theme = theme;
     io.to(roomId).emit('gameState', { ...game });
   });
+
+  socket.on('typing', ({ roomId }) => {
+    const game = games.get(roomId);
+    if (!game) return;
+
+    game.typingPlayer = socket.id;
+    io.to(roomId).emit('gameState', { ...game });
+  });
+
+  socket.on('stopTyping', ({ roomId }) => {
+    const game = games.get(roomId);
+    if (!game || game.typingPlayer !== socket.id) return;
+
+    game.typingPlayer = null;
+    io.to(roomId).emit('gameState', { ...game });
+  });
 });
 
 const PORT = 3000;

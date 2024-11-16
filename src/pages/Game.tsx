@@ -8,6 +8,15 @@ import { FinalStory } from '../components/FinalStory';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedSentence } from '../components/AnimatedSentence';
 import { GameLobby } from '../components/GameLobby';
+import { debounce } from 'lodash';
+
+const debouncedTypingStart = debounce((socket, roomId) => {
+  socket.emit('typing', { roomId });
+}, 500);
+
+const debouncedTypingEnd = debounce((socket, roomId) => {
+  socket.emit('stopTyping', { roomId });
+}, 1000);
 
 export default function Game() {
   const { roomId } = useParams();
@@ -29,8 +38,9 @@ export default function Game() {
     return () => {
       socket.off('gameState');
       socket.off('gameError');
+      socket.emit('stopTyping', { roomId });
     };
-  }, [socket, playerName, navigate]);
+  }, [socket, playerName, navigate, roomId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +84,16 @@ export default function Game() {
 
   const isNewSentence = (index: number) => {
     return index === gameState.sentences.length - 1;
+  };
+
+  const handleTypingStart = () => {
+    if (!socket) return;
+    debouncedTypingStart(socket, roomId);
+  };
+
+  const handleTypingEnd = () => {
+    if (!socket) return;
+    debouncedTypingEnd(socket, roomId);
   };
 
   if (!gameStarted) {
@@ -200,6 +220,17 @@ export default function Game() {
               })}
             </div>
 
+            {gameState.typingPlayer && gameState.typingPlayer !== socket?.id && (
+              <div className="flex gap-3 text-xl leading-relaxed items-start py-2">
+                <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
+                  {gameState.players.find(p => p.id === gameState.typingPlayer)?.name}:
+                </span>
+                <p className="flex-1 text-gray-400 animate-pulse">
+                  در حال نوشتن...
+                </p>
+              </div>
+            )}
+
             {gameState.currentTurn === 'ai' && (
               <div className="flex gap-3 text-xl leading-relaxed items-start py-2">
                 <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
@@ -227,7 +258,11 @@ export default function Game() {
             <div className="max-w-2xl mx-auto flex gap-3">
               <input
                 value={sentence}
-                onChange={(e) => setSentence(e.target.value)}
+                onChange={(e) => {
+                  setSentence(e.target.value);
+                  handleTypingStart();
+                }}
+                onBlur={handleTypingEnd}
                 placeholder="جمله‌ی خود را بنویسید..."
                 className="flex-1 bg-white/5 rounded-lg px-4 py-3 text-lg"
                 autoFocus
