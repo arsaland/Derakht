@@ -294,7 +294,7 @@ export default function Game() {
 
             {gameState.isProcessing && (
               <p className="text-xl opacity-60 animate-pulse">
-                هوش مصنوعی در حال پردازش داستان است...
+                هوش‌یار در حال پردازش داستان است...
               </p>
             )}
           </div>
