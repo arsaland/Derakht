@@ -7,6 +7,7 @@ import { RoundTransition } from '../components/RoundTransition';
 import { FinalStory } from '../components/FinalStory';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedSentence } from '../components/AnimatedSentence';
+import { GameLobby } from '../components/GameLobby';
 
 export default function Game() {
   const { roomId } = useParams();

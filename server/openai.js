@@ -7,6 +7,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+export const FEATURES = {
+  tts: false,  // Text-to-speech generation
+  images: false // DALL-E image generation
+};
+
 export async function generateFinalStory(sentences) {
   try {
     const response = await openai.chat.completions.create({
@@ -90,6 +95,10 @@ export async function generateContinuationSentence(sentences) {
 }
 
 export async function generateStoryImage(story) {
+  if (!FEATURES.images) {
+    return null;
+  }
+
   try {
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -108,16 +117,18 @@ export async function generateStoryImage(story) {
 }
 
 export async function generateStoryAudio(story) {
+  if (!FEATURES.tts) {
+    return null;
+  }
+
   try {
     const response = await openai.audio.speech.create({
       model: "tts-1",
       voice: "onyx",
       input: story,
       speed: 1.0,
-      response_format: "mp3"
     });
 
-    // Convert the response to base64
     const buffer = Buffer.from(await response.arrayBuffer());
     const base64Audio = buffer.toString('base64');
     return `data:audio/mp3;base64,${base64Audio}`;
