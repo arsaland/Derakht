@@ -10,7 +10,7 @@ const openai = new OpenAI({
 export async function generateFinalStory(sentences) {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -42,7 +42,7 @@ export async function generateOpeningSentence(theme) {
     };
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -67,7 +67,7 @@ export async function generateOpeningSentence(theme) {
 export async function generateContinuationSentence(sentences) {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",

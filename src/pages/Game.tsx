@@ -5,6 +5,8 @@ import { useGame } from '../contexts/GameContext';
 import { Share2, Copy, Send } from 'lucide-react';
 import { RoundTransition } from '../components/RoundTransition';
 import { FinalStory } from '../components/FinalStory';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedSentence } from '../components/AnimatedSentence';
 
 export default function Game() {
   const { roomId } = useParams();
@@ -63,10 +65,14 @@ export default function Game() {
   const gameStarted = gameState.round > 0;
 
   const THEMES = {
-    'دلنشین': '🌸',
-    'ماجراجویی': '🗺️',
-    'رازآلود': '🔍',
-    'ترسناک': '👻'
+    'دلنشین': 'دلنشین',
+    'ماجراجویی': 'ماجراجویی',
+    'رازآلود': 'رازآلود',
+    'ترسناک': 'ترسناک'
+  };
+
+  const isNewSentence = (index: number) => {
+    return index === gameState.sentences.length - 1;
   };
 
   if (!gameStarted) {
@@ -108,7 +114,7 @@ export default function Game() {
             <div className="space-y-4">
               <h2 className="text-2xl">انتخاب فضای داستان</h2>
               <div className="grid grid-cols-2 gap-3">
-                {Object.entries(THEMES).map(([theme, emoji]) => (
+                {Object.keys(THEMES).map((theme) => (
                   <button
                     key={theme}
                     onClick={() => socket?.emit('selectTheme', { roomId, theme })}
@@ -117,7 +123,6 @@ export default function Game() {
                         ? 'border-white bg-white/10'
                         : 'border-white/10 hover:border-white/30'}`}
                   >
-                    <div className="text-2xl mb-2">{emoji}</div>
                     <div className="text-lg">{theme}</div>
                   </button>
                 ))}
@@ -136,8 +141,7 @@ export default function Game() {
 
           {!isHost && gameState.theme && (
             <div className="text-center space-y-2">
-              <div className="text-3xl">{THEMES[gameState.theme]}</div>
-              <div className="text-xl">فضای داستان: {gameState.theme}</div>
+              <div className="text-3xl">فضای داستان: {gameState.theme}</div>
             </div>
           )}
         </div>
@@ -162,30 +166,32 @@ export default function Game() {
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="flex items-center justify-between opacity-60 text-lg">
               <span>اتاق: {roomId}</span>
-              <span>نوبت: {gameState.players.find(p => p.id === gameState.currentTurn)?.name}</span>
+              <span>نوبت: {
+                gameState.currentTurn === 'ai'
+                  ? 'هوش‌یار'
+                  : gameState.players.find(p => p.id === gameState.currentTurn)?.name
+              }</span>
             </div>
 
             <div className="space-y-4">
               {gameState.sentences.map((text, i) => {
                 const player = gameState.players.find(p => p.sentenceIndices?.includes(i));
                 const isAIGenerated = i === 0 || gameState.aiSentenceIndices?.includes(i);
+                const isLatest = isNewSentence(i);
 
                 return (
                   <div
                     key={i}
                     className="flex gap-3 text-xl leading-relaxed items-start py-2"
                   >
-                    <span
-                      className={`
-                        whitespace-nowrap font-medium min-w-[100px] text-left
-                        ${isAIGenerated ? 'text-blue-400 font-bold' : 'text-gray-400'}
-                      `}
-                    >
+                    <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
                       {isAIGenerated ? "هوش‌یار:" : player?.name + ":"}
                     </span>
-                    <p className="flex-1">
-                      {text}
-                    </p>
+                    {isLatest ? (
+                      <AnimatedSentence text={text} />
+                    ) : (
+                      <p className="flex-1">{text}</p>
+                    )}
                   </div>
                 );
               })}

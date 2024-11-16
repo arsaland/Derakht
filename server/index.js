@@ -36,7 +36,10 @@ const ROUNDS = 4;
 
 io.on('connection', (socket) => {
   socket.on('createGame', ({ playerName }, callback) => {
-    const roomId = Math.random().toString(36).substring(2, 8);
+    const roomId = Array.from({ length: 4 }, () =>
+      String.fromCharCode(65 + Math.floor(Math.random() * 26))
+    ).join('');
+
     const gameState = {
       players: [{
         id: socket.id,
@@ -61,7 +64,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('joinGame', ({ playerName, roomId }, callback) => {
-    const game = games.get(roomId);
+    const normalizedRoomId = roomId.toUpperCase();
+
+    const actualRoomId = Array.from(games.keys()).find(
+      key => key.toUpperCase() === normalizedRoomId
+    );
+
+    const game = actualRoomId ? games.get(actualRoomId) : null;
+
     if (!game) {
       callback({ success: false });
       return;
@@ -74,9 +84,9 @@ io.on('connection', (socket) => {
       sentenceIndices: []
     });
 
-    socket.join(roomId);
+    socket.join(actualRoomId);
     callback({ success: true });
-    io.to(roomId).emit('gameState', game);
+    io.to(actualRoomId).emit('gameState', game);
   });
 
   socket.on('startGame', async ({ roomId }) => {
@@ -122,17 +132,27 @@ io.on('connection', (socket) => {
     if (isRoundComplete && game.round < ROUNDS) {
       game.round++;
       game.showRoundTransition = true;
-      game.isProcessing = true;
+
+      // Show round transition first
       io.to(roomId).emit('gameState', { ...game });
 
-      // Generate AI continuation sentence
+      // Wait for round transition
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Start AI turn
+      game.showRoundTransition = false;
+      game.currentTurn = 'ai';
+      io.to(roomId).emit('gameState', { ...game });
+
+      // Simulate AI typing time
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Generate and add AI sentence
       const aiSentence = await generateContinuationSentence(game.sentences);
       game.sentences.push(aiSentence);
       game.aiSentenceIndices = [...(game.aiSentenceIndices || []), game.sentences.length - 1];
-      game.isProcessing = false;
-      game.showRoundTransition = false;
 
-      // Set turn to first player after AI's sentence
+      // Move to next player
       game.currentTurn = game.players[0].id;
       io.to(roomId).emit('gameState', { ...game });
     }
