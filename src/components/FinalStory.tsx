@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 interface FinalStoryProps {
   show: boolean;
   story: string;
+  storyImage?: string;
 }
 
-export function FinalStory({ show, story }: FinalStoryProps) {
+export function FinalStory({ show, story, storyImage }: FinalStoryProps) {
   const navigate = useNavigate();
 
   const handleShare = async () => {
@@ -14,9 +15,9 @@ export function FinalStory({ show, story }: FinalStoryProps) {
       await navigator.share({
         title: 'داستان درخت',
         text: story,
+        url: storyImage
       });
     } catch (err) {
-      // Fallback to copying to clipboard
       await navigator.clipboard.writeText(story);
     }
   };
@@ -34,9 +35,23 @@ export function FinalStory({ show, story }: FinalStoryProps) {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="max-w-2xl space-y-6"
+            className="max-w-3xl space-y-8"
           >
-            <h2 className="text-3xl font-bold text-center mb-8">داستان نهایی</h2>
+            {storyImage && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 1 }}
+                className="relative aspect-square max-w-xl mx-auto rounded-lg overflow-hidden"
+              >
+                <img
+                  src={storyImage}
+                  alt="داستان تصویری"
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            )}
+
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

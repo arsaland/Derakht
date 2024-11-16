@@ -35,7 +35,7 @@ export async function generateFinalStory(sentences) {
 export async function generateOpeningSentence(theme) {
   try {
     const prompts = {
-      'دلنشین': 'یک جمله‌ی کوتاه و دلنشین به فارسی بنویس که شروع یک داستان گرم و صمیمی باشد',
+      'دلنشین': 'یک جمله‌ی کوتاه و دلنشین به فرسی بنویس که شروع یک داستان گرم و صمیمی باشد',
       'ماجراجویی': 'یک جمله‌ی کوتاه و هیجان‌انگیز به فارسی بنویس که شروع یک داستان ماجراجویی باشد',
       'رازآلود': 'یک جمله‌ی کوتاه و مرموز به فارسی بنویس که شروع یک داستان رازآلود باشد',
       'ترسناک': 'یک جمله‌ی کوتاه و دلهره‌آور به فارسی بنویس که شروع یک داستان ترسناک باشد'
@@ -86,5 +86,23 @@ export async function generateContinuationSentence(sentences) {
   } catch (error) {
     console.error('OpenAI API error:', error);
     return 'و داستان ادامه یافت...';
+  }
+}
+
+export async function generateStoryImage(story) {
+  try {
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: `Create a black and white artistic illustration that captures the essence of this Persian story: ${story}. The style should be dramatic and atmospheric.`,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard",
+      style: "vivid"
+    });
+
+    return response.data[0].url;
+  } catch (error) {
+    console.error('DALL-E API error:', error);
+    return null;
   }
 }
