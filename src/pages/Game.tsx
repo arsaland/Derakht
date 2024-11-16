@@ -43,6 +43,7 @@ export default function Game() {
   const { gameState, setGameState, playerName } = useGame();
   const [sentence, setSentence] = useState('');
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!socket || !playerName) {
@@ -75,6 +76,13 @@ export default function Game() {
 
   const handleStartGame = () => {
     if (!socket) return;
+
+    if (gameState.players.length < 2) {
+      setError('برای شروع بازی حداقل به ۲ بازیکن نیاز است');
+      setTimeout(() => setError(null), 3000); // Clear error after 3 seconds
+      return;
+    }
+
     socket.emit('startGame', { roomId });
   };
 
@@ -198,6 +206,11 @@ export default function Game() {
                 />
               </div>
 
+              {error && (
+                <p className="text-red-500 text-center animate-fade-in">
+                  {error}
+                </p>
+              )}
               <button
                 onClick={handleStartGame}
                 disabled={!gameState.theme}
@@ -257,7 +270,7 @@ export default function Game() {
                     key={i}
                     className="flex gap-3 text-xl leading-relaxed items-start py-2"
                   >
-                    <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
+                    <span className="whitespace-nowrap font-medium min-w-[100px] text-right text-gray-400">
                       {isAIGenerated ? "هوش‌یار:" : player?.name + ":"}
                     </span>
                     {isLatest ? (
