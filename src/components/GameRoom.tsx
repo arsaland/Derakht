@@ -20,6 +20,7 @@ export function GameRoom({ story, playerId, onSubmitSentence }: GameRoomProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (sentence.trim() && isPlayerTurn) {
+      handleTypingEnd();
       onSubmitSentence(sentence.trim());
       setSentence('');
     }
@@ -56,6 +57,8 @@ export function GameRoom({ story, playerId, onSubmitSentence }: GameRoomProps) {
             type="text"
             value={sentence}
             onChange={(e) => setSentence(e.target.value)}
+            onFocus={handleTypingStart}
+            onBlur={handleTypingEnd}
             disabled={!isPlayerTurn || story.isProcessing}
             placeholder={
               isPlayerTurn

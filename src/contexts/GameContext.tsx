@@ -13,6 +13,12 @@ interface GameState {
   isProcessing: boolean;
   theme?: string;
   typingPlayer?: string;
+  round: number;
+  showRoundTransition: boolean;
+  features: {
+    tts: boolean;
+    images: boolean;
+  };
 }
 
 interface GameContextType {
@@ -28,7 +34,13 @@ const GameContext = createContext<GameContextType>({
     currentTurn: '',
     sentences: [],
     isProcessing: false,
-    theme: ''
+    theme: '',
+    round: 0,
+    showRoundTransition: false,
+    features: {
+      tts: false,
+      images: false
+    }
   },
   setGameState: () => { },
   playerName: '',
@@ -41,7 +53,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     currentTurn: '',
     sentences: [],
     isProcessing: false,
-    theme: ''
+    theme: '',
+    round: 0,
+    showRoundTransition: false,
+    features: {
+      tts: false,
+      images: false
+    }
   });
   const [playerName, setPlayerName] = useState('');
 
