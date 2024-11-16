@@ -183,6 +183,21 @@ export default function Game() {
                   </button>
                 ))}
               </div>
+
+              <div className="space-y-3">
+                <h2 className="text-2xl">ویژگی‌های داستان</h2>
+                <Toggle
+                  enabled={gameState.features?.tts || false}
+                  onChange={(enabled) => socket?.emit('toggleFeature', { roomId, feature: 'tts', enabled })}
+                  label="روایت صوتی داستان"
+                />
+                <Toggle
+                  enabled={gameState.features?.images || false}
+                  onChange={(enabled) => socket?.emit('toggleFeature', { roomId, feature: 'images', enabled })}
+                  label="تصویرسازی داستان"
+                />
+              </div>
+
               <button
                 onClick={handleStartGame}
                 disabled={!gameState.theme}

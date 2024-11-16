@@ -190,6 +190,34 @@ io.on('connection', (socket) => {
           game.isProcessing = true;
           game.typingPlayer = null; // Clear typing state
           io.to(roomId).emit('gameState', { ...game });
+
+          try {
+            // Generate final story
+            const finalStory = await generateFinalStory(game.sentences);
+
+            // Generate image and audio in parallel if features are enabled
+            const [storyImage, storyAudio] = await Promise.all([
+              generateStoryImage(finalStory, game.features),
+              generateStoryAudio(finalStory, game.features)
+            ]);
+
+            // Update game state with final content
+            game.finalStory = finalStory;
+            game.storyImage = storyImage;
+            game.storyAudio = storyAudio;
+            game.isProcessing = false;
+            game.showFinalStory = true;
+
+            // Emit final state
+            io.to(roomId).emit('gameState', { ...game });
+          } catch (error) {
+            console.error('Error generating final content:', error);
+            // Handle error gracefully
+            game.isProcessing = false;
+            game.finalStory = game.sentences.join("\n");
+            game.showFinalStory = true;
+            io.to(roomId).emit('gameState', { ...game });
+          }
         }
       } else {
         // Move to next player
