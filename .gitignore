@@ -55,3 +55,14 @@ desktop.ini
 
 start.bat
 push.bat
+
+# Environment files
+.env
+.env.local
+.env.*
+*.env
+
+# Other potential config files
+config.js
+config.local.js
+settings.json
