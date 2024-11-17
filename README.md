@@ -51,9 +51,6 @@ npm run dev
 4. Watch as AI enhances the narrative flow
 5. Experience the final story with generated visuals and narration
 
-## Contributing
-
-We welcome contributions! Feel free to submit a Pull Request or open an Issue.
 
 ## License
 
