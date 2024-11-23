@@ -22,7 +22,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build application
         run: npm run build
@@ -31,8 +31,9 @@ jobs:
 
       - name: Generate deployment package
         run: |
+          rm -rf node_modules
           npm ci --production
-          zip -r deploy.zip . -x "*.git*" "src/*" "*.env*"
+          zip -r deploy.zip . -x "*.git*" "src/*" "*.env*" ".ebextensions/*"
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
