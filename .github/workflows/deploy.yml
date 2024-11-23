@@ -24,8 +24,8 @@ jobs:
 
       - name: Make scripts executable
         run: |
-          chmod +x .platform/hooks/predeploy/01_configure_nginx.sh
-          chmod +x .platform/hooks/postdeploy/01_reload_nginx.sh
+          git update-index --chmod=+x .platform/hooks/predeploy/01_configure_nginx.sh
+          git update-index --chmod=+x .platform/hooks/postdeploy/01_reload_nginx.sh
         shell: bash
 
       - name: Install dependencies
