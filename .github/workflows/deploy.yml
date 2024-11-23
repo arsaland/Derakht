@@ -22,11 +22,58 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Make scripts executable
+      - name: Create platform configuration
         run: |
-          git update-index --chmod=+x .platform/hooks/predeploy/01_configure_nginx.sh
-          git update-index --chmod=+x .platform/hooks/postdeploy/01_reload_nginx.sh
-        shell: bash
+          mkdir -p .platform/hooks/predeploy
+          mkdir -p .platform/hooks/postdeploy
+          mkdir -p .platform/nginx/conf.d
+          
+          # Create predeploy script
+          echo '#!/bin/bash
+          sudo systemctl enable nginx
+          sudo systemctl start nginx' > .platform/hooks/predeploy/01_configure_nginx.sh
+          
+          # Create postdeploy script
+          echo '#!/bin/bash
+          sudo nginx -t && sudo systemctl reload nginx || sudo systemctl restart nginx' > .platform/hooks/postdeploy/01_reload_nginx.sh
+          
+          # Create Nginx configuration for AL2023
+          echo 'upstream nodejs {
+              server 127.0.0.1:8081;
+              keepalive 256;
+          }
+
+          server {
+              listen 8080;
+              server_tokens off;
+
+              location /health {
+                  access_log off;
+                  return 200 '"'"'OK'"'"';
+                  add_header Content-Type text/plain;
+              }
+
+              location / {
+                  proxy_pass http://nodejs;
+                  proxy_http_version 1.1;
+                  proxy_set_header Connection "";
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_buffer_size 128k;
+                  proxy_buffers 4 256k;
+                  proxy_busy_buffers_size 256k;
+              }
+
+              gzip on;
+              gzip_comp_level 4;
+              gzip_types text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+          }' > .platform/nginx/conf.d/proxy.conf
+          
+          # Make scripts executable
+          chmod +x .platform/hooks/predeploy/01_configure_nginx.sh
+          chmod +x .platform/hooks/postdeploy/01_reload_nginx.sh
 
       - name: Install dependencies
         run: npm ci
