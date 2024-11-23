@@ -66,3 +66,34 @@ push.bat
 config.js
 config.local.js
 settings.json
+
+# Sensitive Data
+.env
+.env.*
+*.env
+config.js
+config.local.js
+aws.json
+aws-config.json
+.aws/*
+
+# AWS Configuration
+.elasticbeanstalk/
+.ebextensions/
+.platform/
+
+# Local Development
+*.local
+.local/
+.vscode/*
+.idea/*
+local-*
+dev-*
+test-*
+
+# Build & Output
+/build
+/dist
+/dist-ssr
+*.build
+build/*
