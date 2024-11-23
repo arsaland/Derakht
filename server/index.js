@@ -11,6 +11,12 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const server = createServer(app);
+
+// Add health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production'
