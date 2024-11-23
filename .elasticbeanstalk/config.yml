@@ -1,6 +1,6 @@
 branch-defaults:
   main:
-    environment: derakht-prod
+    environment: Derakht-env
     group_suffix: null
 
 global:
