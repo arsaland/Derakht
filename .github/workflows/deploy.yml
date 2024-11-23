@@ -31,8 +31,9 @@ jobs:
 
       - name: Generate deployment package
         run: |
-          zip -r deploy.zip . -x "*.git*" "node_modules/*" "src/*" "*.env*"
-          
+          npm ci --production
+          zip -r deploy.zip . -x "*.git*" "src/*" "*.env*"
+
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
         with:
