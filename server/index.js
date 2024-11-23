@@ -119,7 +119,7 @@ io.on('connection', (socket) => {
 
   socket.on('startGame', async ({ roomId }) => {
     const game = games.get(roomId);
-    if (!game || !game.theme) return;
+    if (!game) return;
 
     if (game.players.length < MIN_PLAYERS) {
       io.to(roomId).emit('gameError', 'Need at least 2 players to start');

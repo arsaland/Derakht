@@ -13,7 +13,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+    const SOCKET_URL = import.meta.env.DEV ? 'http://localhost:8081' : (import.meta.env.VITE_SOCKET_URL || window.location.origin);
     console.log('Connecting to socket URL:', SOCKET_URL);
 
     const newSocket = io(SOCKET_URL, {
