@@ -1,10 +1,11 @@
 {
   "name": "derakht",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "engines": {
-    "node": "18.x"
+    "node": "18.x",
+    "npm": "9.x"
   },
   "scripts": {
     "start": "node server.js",
