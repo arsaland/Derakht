@@ -37,14 +37,14 @@ jobs:
           echo '#!/bin/bash
           sudo nginx -t && sudo systemctl reload nginx || sudo systemctl restart nginx' > .platform/hooks/postdeploy/01_reload_nginx.sh
           
-          # Create Nginx configuration for AL2023
+          # Create Nginx configuration
           echo 'upstream nodejs {
               server 127.0.0.1:8081;
               keepalive 256;
           }
 
           server {
-              listen 8080;
+              listen 80;
               server_tokens off;
 
               location /health {
