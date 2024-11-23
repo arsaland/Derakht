@@ -13,17 +13,30 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const SOCKET_URL = import.meta.env.DEV
-      ? `http://${window.location.hostname}:3000`
-      : '/';
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+    console.log('Connecting to socket URL:', SOCKET_URL);
 
     const newSocket = io(SOCKET_URL, {
+      path: '/socket.io/',
       transports: ['websocket', 'polling'],
-      autoConnect: true
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
     });
 
-    newSocket.on('connect', () => setConnected(true));
-    newSocket.on('disconnect', () => setConnected(false));
+    newSocket.on('connect', () => {
+      console.log('Socket connected successfully');
+      setConnected(true);
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('Socket disconnected');
+      setConnected(false);
+    });
 
     setSocket(newSocket);
 
