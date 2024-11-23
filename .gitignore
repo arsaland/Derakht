@@ -78,11 +78,6 @@ aws.json
 aws-config.json
 .aws/*
 
-# AWS Configuration
-.elasticbeanstalk/
-.ebextensions/
-.platform/
-
 # Local Development
 *.local
 .local/
@@ -91,6 +86,10 @@ aws-config.json
 local-*
 dev-*
 test-*
+
+# Keep AWS deployment configurations
+!.platform/
+!.elasticbeanstalk/
 
 # Build & Output
 /build
