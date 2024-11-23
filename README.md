@@ -60,7 +60,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - OpenAI for GPT-4, DALL-E 3, and TTS APIs
 - [Vazirmatn](https://github.com/rastikerdar/vazirmatn) for Persian typography
-- [Lucide React](https://lucide.dev) for iconography
+- [Lucide React](https://lucide.dev) for iconography. trigger deploy
 
 ---
 
