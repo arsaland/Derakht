@@ -20,14 +20,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
 
-      - name: Update npm to latest version
-        run: npm install -g npm@latest
+      - name: Make scripts executable
+        run: |
+          chmod +x .platform/hooks/predeploy/01_configure_nginx.sh
+          chmod +x .platform/hooks/postdeploy/01_reload_nginx.sh
+        shell: bash
 
       - name: Install dependencies
-        run: |
-          npm cache clean --force
-          npm ci
+        run: npm ci
 
       - name: Build application
         run: npm run build
@@ -36,8 +38,9 @@ jobs:
 
       - name: Generate deployment package
         run: |
+          rm -rf node_modules
           npm ci --production
-          zip -r deploy.zip . -x "*.git*" "src/*" "*.env*"
+          zip -r deploy.zip . -x "*.git*" "src/*" "*.env*" ".github/*" "README.md"
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
@@ -49,4 +52,4 @@ jobs:
           region: eu-central-1
           version_label: derakht-${{ github.sha }}
           deployment_package: deploy.zip
-          wait_for_environment_recovery: 300
+          wait_for_environment_recovery: 600
