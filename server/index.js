@@ -320,7 +320,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Add these error handlers
+// Add error handlers
 server.on('error', (error) => {
   console.error('Server error:', error);
   process.exit(1);
