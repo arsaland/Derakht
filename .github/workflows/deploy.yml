@@ -22,7 +22,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build application
         run: npm run build
@@ -32,8 +32,8 @@ jobs:
       - name: Generate deployment package
         run: |
           rm -rf node_modules
-          npm ci --production
-          zip -r deploy.zip . -x "*.git*" "src/*" "*.env*" ".ebextensions/*"
+          npm install --production
+          zip -r deploy.zip . -x "*.git*" "src/*" "*.env*"
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
@@ -46,3 +46,4 @@ jobs:
           version_label: derakht-${{ github.sha }}
           deployment_package: deploy.zip
           wait_for_environment_recovery: 300
+          environment_variables: OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
