@@ -21,57 +21,25 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     const newSocket = io(SOCKET_URL, {
       path: '/socket.io/',
-      transports: ['polling'],
+      transports: ['polling', 'websocket'],
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: Infinity,
-      timeout: 20000,
-      forceNew: true,
-      autoConnect: true,
-      withCredentials: false,
-      extraHeaders: {
-        "Access-Control-Allow-Origin": "*"
-      }
+      reconnectionAttempts: 5,
+      timeout: 20000
     });
 
     newSocket.on('connect', () => {
       console.log('Socket connected successfully');
       setConnected(true);
-
-      if (!newSocket.io.opts.transports.includes('websocket')) {
-        newSocket.io.opts.transports = ['polling', 'websocket'];
-      }
-    });
-
-    newSocket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-      if (newSocket.io.opts.transports.includes('websocket')) {
-        console.log('Falling back to polling transport');
-        newSocket.io.opts.transports = ['polling'];
-      }
     });
 
     newSocket.on('disconnect', (reason) => {
       console.log('Socket disconnected:', reason);
       setConnected(false);
-
-      if (reason === 'transport close') {
-        console.log('Attempting immediate reconnection...');
-        newSocket.connect();
-      }
-    });
-
-    newSocket.io.on('reconnect', (attempt) => {
-      console.log('Socket reconnected after', attempt, 'attempts');
-    });
-
-    newSocket.io.on('reconnect_attempt', () => {
-      console.log('Attempting to reconnect...');
     });
 
     setSocket(newSocket);
     return newSocket;
-  }, [gameState.currentTurn]);
+  }, []);
 
   useEffect(() => {
     const newSocket = initSocket();

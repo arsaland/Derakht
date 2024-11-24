@@ -20,26 +20,26 @@ app.get('/health', (req, res) => {
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
-    credentials: false,
-    allowedHeaders: ["Content-Type", "Authorization"]
+    methods: ["GET", "POST"]
   },
   path: '/socket.io/',
   transports: ['polling', 'websocket'],
-  allowEIO3: true,
   pingTimeout: 60000,
-  pingInterval: 25000,
-  cookie: false,
-  allowUpgrades: true,
-  maxHttpBufferSize: 1e8, // 100 MB
-  perMessageDeflate: {
-    threshold: 2048
-  }
+  pingInterval: 25000
 });
 
-// Add error handling
+// Add basic error logging
 io.engine.on("connection_error", (err) => {
   console.log('Connection error:', err);
+});
+
+// Log all connections and disconnections
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+
+  socket.on('disconnect', (reason) => {
+    console.log('Client disconnected:', socket.id, 'Reason:', reason);
+  });
 });
 
 server.on('upgrade', (req, socket, head) => {
