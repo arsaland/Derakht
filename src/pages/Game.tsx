@@ -39,7 +39,7 @@ export function Toggle({ enabled, onChange, label }: ToggleProps) {
 export default function Game() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const { socket } = useSocket();
+  const { socket, connected } = useSocket();
   const { gameState, setGameState, playerName } = useGame();
   const [sentence, setSentence] = useState('');
   const [copied, setCopied] = useState(false);
@@ -153,6 +153,27 @@ export default function Game() {
       }
     };
   }, [socket, roomId]);
+
+  useEffect(() => {
+    if (socket && connected && roomId) {
+      // Listen for reconnection success
+      socket.on('connect', () => {
+        console.log('Reconnected, rejoining room:', roomId);
+        socket.emit('rejoinGame', {
+          roomId,
+          gameState: gameState
+        });
+      });
+
+      // Update server with game state changes
+      if (gameState.currentTurn) {
+        socket.emit('gameState', {
+          roomId,
+          state: gameState
+        });
+      }
+    }
+  }, [socket, connected, roomId, gameState]);
 
   if (!gameStarted) {
     return (

@@ -55,7 +55,40 @@ const ROUNDS = 4;
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
 
+// Store active games in memory
+const activeGames = new Map();
+
 io.on('connection', (socket) => {
+  console.log('Client connected');
+
+  socket.on('rejoinGame', ({ roomId, gameState }) => {
+    if (roomId) {
+      socket.join(roomId);
+
+      // Update or restore game state
+      if (gameState && !activeGames.has(roomId)) {
+        activeGames.set(roomId, gameState);
+      }
+
+      // Emit current game state to rejoining player
+      if (activeGames.has(roomId)) {
+        socket.emit('gameState', activeGames.get(roomId));
+      }
+    }
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('Client disconnected:', reason);
+    // Don't remove game state on disconnect to allow rejoining
+  });
+
+  // Update game state in memory when it changes
+  socket.on('gameState', ({ roomId, state }) => {
+    if (roomId) {
+      activeGames.set(roomId, state);
+    }
+  });
+
   socket.on('createGame', ({ playerName }, callback) => {
     const roomId = Array.from({ length: 4 }, () =>
       String.fromCharCode(65 + Math.floor(Math.random() * 26))
@@ -250,32 +283,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
-    games.forEach((game, roomId) => {
-      const playerIndex = game.players.findIndex(p => p.id === socket.id);
-      if (playerIndex !== -1) {
-        game.players.splice(playerIndex, 1);
-
-        if (game.players.length === 0) {
-          games.delete(roomId);
-        } else {
-          if (game.currentTurn === socket.id) {
-            game.currentTurn = game.players[0].id;
-          }
-          io.to(roomId).emit('gameState', game);
-        }
-      }
-    });
-
-    // Find any game where this player was typing
-    for (const [roomId, game] of games.entries()) {
-      if (game.typingPlayer === socket.id) {
-        game.typingPlayer = null;
-        io.to(roomId).emit('gameState', { ...game });
-      }
-    }
-  });
-
   socket.on('selectTheme', ({ roomId, theme }) => {
     const game = games.get(roomId);
     if (!game) return;
@@ -324,6 +331,16 @@ io.on('connection', (socket) => {
     }
   });
 });
+
+// Clean up inactive games periodically
+setInterval(() => {
+  const now = Date.now();
+  activeGames.forEach((game, roomId) => {
+    if (now - game.lastActivity > 3600000) { // 1 hour
+      activeGames.delete(roomId);
+    }
+  });
+}, 3600000); // Check every hour
 
 const PORT = process.env.PORT || 8081;
 server.listen(PORT, '0.0.0.0', () => {
