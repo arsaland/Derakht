@@ -21,25 +21,25 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     const newSocket = io(SOCKET_URL, {
       path: '/socket.io/',
-      transports: ['polling', 'websocket'],
+      transports: ['polling'],
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: Infinity,
       timeout: 20000,
       forceNew: true,
-      autoConnect: true
+      autoConnect: true,
+      withCredentials: false,
+      extraHeaders: {
+        "Access-Control-Allow-Origin": "*"
+      }
     });
 
     newSocket.on('connect', () => {
       console.log('Socket connected successfully');
       setConnected(true);
 
-      if (gameState.currentTurn && window.location.pathname.includes('/game/')) {
-        const roomId = window.location.pathname.split('/').pop();
-        newSocket.emit('rejoinGame', {
-          roomId,
-          gameState: gameState
-        });
+      if (!newSocket.io.opts.transports.includes('websocket')) {
+        newSocket.io.opts.transports = ['polling', 'websocket'];
       }
     });
 

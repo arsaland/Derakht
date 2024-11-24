@@ -14,17 +14,15 @@ const server = createServer(app);
 
 // Add health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString()
-  });
+  res.status(200).send('OK');
 });
 
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true
+    methods: ["GET", "POST", "OPTIONS"],
+    credentials: false,
+    allowedHeaders: ["Content-Type", "Authorization"]
   },
   path: '/socket.io/',
   transports: ['polling', 'websocket'],
@@ -33,14 +31,19 @@ const io = new Server(server, {
   pingInterval: 25000,
   cookie: false,
   allowUpgrades: true,
+  maxHttpBufferSize: 1e8, // 100 MB
   perMessageDeflate: {
     threshold: 2048
   }
 });
 
-// Add error handling for the server
+// Add error handling
 io.engine.on("connection_error", (err) => {
   console.log('Connection error:', err);
+});
+
+server.on('upgrade', (req, socket, head) => {
+  console.log('Upgrade request received');
 });
 
 if (process.env.NODE_ENV === 'production') {
