@@ -27,11 +27,20 @@ const io = new Server(server, {
     credentials: true
   },
   path: '/socket.io/',
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   allowEIO3: true,
   pingTimeout: 60000,
   pingInterval: 25000,
-  cookie: false
+  cookie: false,
+  allowUpgrades: true,
+  perMessageDeflate: {
+    threshold: 2048
+  }
+});
+
+// Add error handling for the server
+io.engine.on("connection_error", (err) => {
+  console.log('Connection error:', err);
 });
 
 if (process.env.NODE_ENV === 'production') {
