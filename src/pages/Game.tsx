@@ -87,8 +87,23 @@ export default function Game() {
   };
 
   const copyRoomCode = async () => {
-    await navigator.clipboard.writeText(roomId || '');
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(roomId || '');
+      setCopied(true);
+    } catch (err) {
+      // Fallback for when clipboard API is not available
+      const textArea = document.createElement('textarea');
+      textArea.value = roomId || '';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+      } catch (e) {
+        console.error('Failed to copy:', e);
+      }
+      document.body.removeChild(textArea);
+    }
     setTimeout(() => setCopied(false), 2000);
   };
 

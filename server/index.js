@@ -22,21 +22,16 @@ app.get('/health', (req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production'
-      ? false
-      : [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        `http://${process.env.LOCAL_IP}:5173`
-      ],
-    methods: ['GET', 'POST'],
+    origin: "*",
+    methods: ["GET", "POST"],
     credentials: true
   },
   path: '/socket.io/',
   transports: ['websocket', 'polling'],
   allowEIO3: true,
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
+  cookie: false
 });
 
 if (process.env.NODE_ENV === 'production') {
