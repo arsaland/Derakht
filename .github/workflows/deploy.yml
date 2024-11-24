@@ -105,6 +105,11 @@ jobs:
         env:
           VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL }}
 
+      - name: Add temporary HTTP configuration
+        run: |
+          mkdir -p .platform/nginx/conf.d
+          cp .platform/nginx/conf.d/http_temp.conf .platform/nginx/conf.d/
+
       - name: Generate deployment package
         run: |
           rm -rf node_modules
