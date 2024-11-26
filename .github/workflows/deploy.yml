@@ -104,6 +104,7 @@ jobs:
         run: npm run build
         env:
           VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL }}
+          VITE_BASE_PATH: '/derakht'
 
       - name: Generate deployment package
         run: |

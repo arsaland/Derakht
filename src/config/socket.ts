@@ -1,13 +1,18 @@
-export const getSocketURL = () =>
-    import.meta.env.DEV
-        ? 'http://localhost:8081'
-        : (import.meta.env.VITE_SOCKET_URL || window.location.origin);
+export const getSocketURL = () => {
+    if (import.meta.env.DEV) {
+        return 'http://localhost:8081';
+    }
+
+    // For production, use relative path to work with both direct EB URL and game hub subdirectory
+    return window.location.origin;
+};
 
 export const socketConfig = {
     path: '/socket.io/',
-    transports: ['polling', 'websocket'],
+    transports: ['websocket', 'polling'],
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     reconnectionAttempts: 5,
-    timeout: 20000
+    timeout: 20000,
+    secure: true // Enable secure connection in production
 };
