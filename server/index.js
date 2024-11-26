@@ -40,8 +40,11 @@ const io = new Server(server, {
 });
 
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(join(__dirname, '../dist')));
-  app.get('*', (req, res) => {
+  // Serve static files from the dist directory
+  app.use('/derakht', express.static(join(__dirname, '../dist')));
+
+  // Handle all routes for the SPA
+  app.get('/derakht/*', (req, res) => {
     res.sendFile(join(__dirname, '../dist/index.html'));
   });
 }

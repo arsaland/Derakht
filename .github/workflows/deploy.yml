@@ -52,13 +52,29 @@ jobs:
               listen 80;
               server_tokens off;
 
-              location /health {
-                  access_log off;
-                  return 200 '"'"'OK'"'"';
-                  add_header Content-Type text/plain;
+              # Include MIME types
+              include /etc/nginx/mime.types;
+              types {
+                  application/javascript mjs;
+                  application/javascript js;
               }
 
-              # WebSocket support with enhanced configuration
+              root /var/app/current/dist;
+              index index.html;
+
+              # Serve static files with proper MIME types
+              location /derakht/assets/ {
+                  alias /var/app/current/dist/assets/;
+                  expires 1y;
+                  add_header Cache-Control "public, immutable";
+                  try_files $uri =404;
+              }
+
+              location /derakht/ {
+                  try_files $uri $uri/ /derakht/index.html;
+              }
+
+              # WebSocket support
               location /socket.io/ {
                   proxy_pass http://nodejs;
                   proxy_http_version 1.1;
@@ -69,28 +85,21 @@ jobs:
                   proxy_set_header X-Real-IP $remote_addr;
                   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                   proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_read_timeout 86400;    # Increased timeout for long-running connections
-                  proxy_send_timeout 86400;    # Increased timeout for long-running connections
-                  proxy_buffering off;         # Disable buffering for WebSocket
-                  proxy_set_header X-NginX-Proxy true;
+                  proxy_read_timeout 86400;
+                  proxy_send_timeout 86400;
+                  proxy_buffering off;
               }
 
-              location / {
-                  proxy_pass http://nodejs;
-                  proxy_http_version 1.1;
-                  proxy_set_header Connection "";
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_buffer_size 128k;
-                  proxy_buffers 4 256k;
-                  proxy_busy_buffers_size 256k;
+              # Health check
+              location /health {
+                  access_log off;
+                  return 200 "OK";
+                  add_header Content-Type text/plain;
               }
 
               gzip on;
               gzip_comp_level 4;
-              gzip_types text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+              gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
           }' > .platform/nginx/conf.d/proxy.conf
           
           # Make scripts executable
