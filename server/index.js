@@ -23,7 +23,7 @@ app.get('/health', (req, res) => {
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production'
-      ? false
+      ? 'https://dorchin.io'
       : [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
@@ -32,7 +32,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
     credentials: true
   },
-  path: '/socket.io/',
+  path: '/derakht/socket.io/',
   transports: ['websocket', 'polling'],
   allowEIO3: true,
   pingTimeout: 60000,
