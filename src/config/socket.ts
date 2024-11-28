@@ -8,7 +8,7 @@ export const getSocketURL = () => {
 };
 
 export const socketConfig = {
-    path: '/socket.io/',
+    path: '/derakht/socket.io/',
     transports: ['websocket', 'polling'],
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
