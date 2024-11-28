@@ -25,7 +25,8 @@ const io = new Server(server, {
     origin: process.env.NODE_ENV === 'production'
       ? [
         'https://dorchin.io',
-        'http://derakht.eu-central-1.elasticbeanstalk.com'
+        'http://derakht.eu-central-1.elasticbeanstalk.com',
+        'https://derakht.eu-central-1.elasticbeanstalk.com'
       ]
       : [
         'http://localhost:5173',
