@@ -13,15 +13,19 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const SOCKET_URL = import.meta.env.DEV ? 'http://localhost:8081' : (import.meta.env.VITE_SOCKET_URL || window.location.origin);
+    const SOCKET_URL = import.meta.env.DEV
+      ? 'http://localhost:8081'
+      : 'https://dorchin.io';  // Always use HTTPS in production
+
     console.log('Connecting to socket URL:', SOCKET_URL);
 
     const newSocket = io(SOCKET_URL, {
-      path: '/socket.io/',
+      path: '/derakht/socket.io/',  // Make sure path matches server config
       transports: ['websocket', 'polling'],
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      secure: true  // Force secure connection
     });
 
     newSocket.on('connect', () => {
