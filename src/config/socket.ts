@@ -4,8 +4,8 @@ export const getSocketURL = () => {
         return 'http://localhost:8081';
     }
 
-    // In production, always use dorchin.io
-    return 'https://dorchin.io';
+    // In production, always use the current origin (dorchin.io)
+    return window.location.origin;
 };
 
 export const socketConfig = {
