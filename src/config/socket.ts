@@ -1,10 +1,11 @@
 export const getSocketURL = () => {
+    // Check if we're in development
     if (import.meta.env.DEV) {
         return 'http://localhost:8081';
     }
 
-    // Always use the current window location origin
-    return window.location.origin;
+    // In production, always use dorchin.io
+    return 'https://dorchin.io';
 };
 
 export const socketConfig = {
