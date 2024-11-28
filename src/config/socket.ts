@@ -3,8 +3,15 @@ export const getSocketURL = () => {
         return 'http://localhost:8081';
     }
 
-    // For production, use relative path to work with both direct EB URL and game hub subdirectory
-    return window.location.origin;
+    // Check if we're on the main domain or EB domain
+    const isDorchinDomain = window.location.hostname === 'dorchin.io';
+
+    if (isDorchinDomain) {
+        return 'https://dorchin.io';
+    }
+
+    // For EB domain, use http
+    return 'http://derakht.eu-central-1.elasticbeanstalk.com';
 };
 
 export const socketConfig = {
@@ -14,5 +21,5 @@ export const socketConfig = {
     reconnectionDelayMax: 5000,
     reconnectionAttempts: 5,
     timeout: 20000,
-    secure: true // Enable secure connection in production
+    secure: false // Will be automatically upgraded to secure when on https
 };
