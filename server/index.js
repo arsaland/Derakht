@@ -31,14 +31,11 @@ const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production'
       ? ['https://dorchin.io']
-      : [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173'
-      ],
+      : ['http://localhost:5173', 'http://127.0.0.1:5173'],
     methods: ['GET', 'POST'],
     credentials: true
   },
-  path: '/derakht/socket.io/',
+  path: '/derakht/socket.io',
   transports: ['websocket', 'polling'],
   allowEIO3: true,
   pingTimeout: 60000,
