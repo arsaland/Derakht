@@ -9,6 +9,9 @@ import cors from 'cors';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 8081) : 3000;
+const BASE_PATH = process.env.NODE_ENV === 'production' ? '/derakht' : '';
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -18,15 +21,18 @@ const io = new Server(server, {
       : [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
-        `http://${process.env.LOCAL_IP}:5173`
+        `http://${process.env.LOCAL_IP}:5173`,
+        new RegExp(`http://192\.168\..*:5173`)
       ],
-    methods: ['GET', 'POST']
-  }
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  path: process.env.NODE_ENV === 'production' ? '/derakht/socket.io' : '/socket.io'
 });
 
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(join(__dirname, '../dist')));
-  app.get('*', (req, res) => {
+  app.use(BASE_PATH, express.static(join(__dirname, '../dist')));
+  app.get(`${BASE_PATH}/*`, (req, res) => {
     res.sendFile(join(__dirname, '../dist/index.html'));
   });
 }
@@ -306,7 +312,6 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
