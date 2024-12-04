@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 5173
-  }
+    port: 5173,
+    strictPort: true
+  },
+  base: process.env.NODE_ENV === 'production' ? '/derakht/' : '/'
 });
