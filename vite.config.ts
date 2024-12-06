@@ -8,5 +8,9 @@ export default defineConfig({
     port: 5173,
     strictPort: true
   },
-  base: process.env.NODE_ENV === 'production' ? '/derakht/' : '/'
+  base: process.env.VITE_BASE_PATH || '/',
+  build: {
+    assetsDir: 'assets',
+    outDir: 'dist'
+  }
 });

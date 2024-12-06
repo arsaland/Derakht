@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: 'Noora';
-  src: url('/fonts/Noora-FD-SemiBold.woff2') format('woff2');
+  src: url('/public/fonts/Noora-FD-SemiBold.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
