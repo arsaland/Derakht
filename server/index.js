@@ -10,29 +10,58 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 8081) : 3000;
-const BASE_PATH = process.env.NODE_ENV === 'production' ? '/derakht' : '';
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production'
-      ? false
+      ? '*'
       : [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
         `http://${process.env.LOCAL_IP}:5173`,
-        new RegExp(`http://192\.168\..*:5173`)
+        new RegExp(`http://192\.168\..*:5173`),
+        'http://localhost:8080',
+        'http://127.0.0.1:8080'
       ],
     methods: ['GET', 'POST'],
     credentials: true
   },
-  path: process.env.NODE_ENV === 'production' ? '/derakht/socket.io' : '/socket.io'
+  path: '/socket.io/'
 });
 
+const nsp = io.of('/'); // Default namespace
+
+app.use(express.json());
+app.use(cors());
+
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; font-src 'self' data: *; style-src 'self' 'unsafe-inline'; img-src 'self' data: *; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+  );
+  next();
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  app.use(express.static(join(__dirname, '../dist')));
+  app.use('/public', express.static(join(__dirname, '../public')));
+  app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, '../dist/index.html'));
+  });
+}
+
 if (process.env.NODE_ENV === 'production') {
-  app.use(BASE_PATH, express.static(join(__dirname, '../dist')));
-  app.get(`${BASE_PATH}/*`, (req, res) => {
+  app.use(express.static(join(__dirname, '../dist'), {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
+    }
+  }));
+  
+  app.get('*', (req, res) => {
     res.sendFile(join(__dirname, '../dist/index.html'));
   });
 }
@@ -315,9 +344,18 @@ io.on('connection', (socket) => {
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; font-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';"
+    "default-src 'self'; font-src 'self' data: *; style-src 'self' 'unsafe-inline'; img-src 'self' data: *; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
   );
   next();
+});
+
+// Add this before your other routes
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy' });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).send('Server is running');
 });
 
 server.listen(PORT, '0.0.0.0', () => {

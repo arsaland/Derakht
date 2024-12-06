@@ -55,3 +55,7 @@ desktop.ini
 
 start.bat
 push.bat
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
