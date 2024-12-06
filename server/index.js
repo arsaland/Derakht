@@ -312,6 +312,14 @@ io.on('connection', (socket) => {
   });
 });
 
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; font-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';"
+  );
+  next();
+});
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });

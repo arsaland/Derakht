@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { TreePine } from 'lucide-react';
 import { BackgroundText } from '../components/BackgroundText';
 
 export default function Home() {
@@ -8,8 +7,11 @@ export default function Home() {
       <BackgroundText />
 
       <div className="space-y-6 relative z-10">
-        <TreePine size={64} className="mx-auto" />
-        <h1 className="text-5xl font-bold">درخت</h1>
+        <img 
+          src="/fonts/derakht-logo.png" 
+          alt="درخت"
+          className="h-32 mx-auto"
+        />
         <p className="text-xl opacity-60">داستان‌سرایی جمعی با هوش مصنوعی</p>
       </div>
 
