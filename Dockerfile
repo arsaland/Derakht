@@ -12,8 +12,6 @@ RUN npm install
 # Copy the rest of the code
 COPY . .
 
-# Add this line to create the audio directory
-RUN mkdir -p /app/public/audio
 
 # Build the frontend
 RUN npm run build
