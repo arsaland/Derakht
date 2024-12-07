@@ -10,7 +10,7 @@ import cors from 'cors';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 8081) : 3000;
+const PORT = process.env.PORT || 8081;
 
 const app = express();
 const server = createServer(app);
@@ -19,12 +19,9 @@ const io = new Server(server, {
     origin: process.env.NODE_ENV === 'production'
       ? '*'
       : [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        `http://${process.env.LOCAL_IP}:5173`,
-        new RegExp(`http://192\.168\..*:5173`),
         'http://localhost:8080',
-        'http://127.0.0.1:8080'
+        'http://127.0.0.1:8080',
+        `http://${process.env.LOCAL_IP}:8080`
       ],
     methods: ['GET', 'POST'],
     credentials: true
