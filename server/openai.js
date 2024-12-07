@@ -1,5 +1,8 @@
 import OpenAI from 'openai';
 import { config } from 'dotenv';
+import path from 'path';
+import { promises as fs } from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 
 config();
 
@@ -13,8 +16,8 @@ export const FEATURES = {
 };
 
 export async function generateFinalStory(sentences) {
-  try {
-    const response = await openai.chat.completions.create({
+  async function attemptStoryGeneration(content) {
+    return await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
@@ -23,15 +26,50 @@ export async function generateFinalStory(sentences) {
         },
         {
           role: "user",
-          content: sentences.join("\n")
+          content: content
         }
       ],
       temperature: 0.8,
       max_tokens: 1000
     });
+  }
 
+  try {
+    // First attempt with original content
+    const response = await attemptStoryGeneration(sentences.join("\n"));
     return response.choices[0].message.content;
   } catch (error) {
+    // If content policy violation, try sanitizing and regenerating
+    if (error?.error?.code === 'content_policy_violation') {
+      console.log('Content policy violation detected, attempting to sanitize...');
+      
+      // Sanitize the content
+      const sanitizeResponse = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "user",
+            content: `
+              این داستان را به شکلی بازنویسی کن که مناسب همه‌ی سنین باشد و محتوای نامناسب نداشته باشد:
+              ${sentences.join("\n")}
+              
+              قوانین:
+              - محتوای اصلی داستان را حفظ کن
+              - هر نوع محتوای نامناسب را با عبارات مناسب جایگزین کن
+              - طول داستان را حفظ کن
+            `
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      // Try generating the final story again with sanitized content
+      const finalResponse = await attemptStoryGeneration(sanitizeResponse.choices[0].message.content);
+      return finalResponse.choices[0].message.content;
+    }
+    
+    // If other error, fallback to original sentences
     console.error('OpenAI API error:', error);
     return sentences.join("\n");
   }
@@ -41,12 +79,12 @@ export async function generateOpeningSentence(theme) {
   const prompt = `یک جمله‌ی فارسی برای شروع یک داستان ${theme} بنویس.
   قوانین:
   - فقط یک جمله‌ی کامل بنویس
-  - جمله باید حداکثر ۱۲۰ کاراکتر باشد
+  - جمله باید حداکثر در ۱۲۰ کاراکتر تمام شود
   - جمله باید جذاب و گیرا باشد
   - جمله باید در یک نقطه‌ی طبیعی تمام شود`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
     max_tokens: 100,
@@ -62,7 +100,14 @@ export async function generateContinuationSentence(sentences) {
       messages: [
         {
           role: "system",
-          content: "You are a creative storyteller. Based on the previous sentences, generate a single engaging sentence in Persian (Farsi) that continues the story naturally. Match the tone and style of the previous sentences. Keep the sentence concise but meaningful."
+          content: `You are a creative storyteller. Based on the previous sentences, generate a single engaging sentence in Persian (Farsi) that continues the story naturally. 
+          
+          Rules:
+          - The sentence must be complete and end with a proper punctuation mark
+          - Maximum length: 120 characters
+          - Must maintain narrative coherence
+          - If approaching character limit, wrap up the thought naturally
+          - Never cut sentences mid-word or mid-thought`
         },
         {
           role: "user",
@@ -70,10 +115,17 @@ export async function generateContinuationSentence(sentences) {
         }
       ],
       temperature: 0.8,
-      max_tokens: 100
+      max_tokens: 100,
+      presence_penalty: 0.6
     });
 
-    return response.choices[0].message.content;
+    // Verify the response ends with a punctuation mark
+    let sentence = response.choices[0].message.content.trim();
+    if (!/[.!?؟،]$/.test(sentence)) {
+      sentence += '.';
+    }
+
+    return sentence;
   } catch (error) {
     console.error('OpenAI API error:', error);
     return 'و داستان ادامه یافت...';
@@ -88,7 +140,7 @@ export async function generateStoryImage(story, features) {
   try {
     const response = await openai.images.generate({
       model: "dall-e-3",
-      prompt: `Create a black and white artistic illustration that captures the essence of this Persian story: ${story}. The style should be dramatic and atmospheric.`,
+      prompt: `Create a safe, family-friendly black and white artistic illustration inspired by this story. Use symbolic and abstract elements to represent the narrative: ${story}. The style should be gentle and atmospheric, suitable for all ages.`,
       n: 1,
       size: "1024x1024",
       quality: "standard",
@@ -115,9 +167,24 @@ export async function generateStoryAudio(story, features) {
       speed: 1.0,
     });
 
+    // Create audio directory if it doesn't exist
+    const audioDir = path.join(process.cwd(), 'public', 'audio');
+    await fs.mkdir(audioDir, { recursive: true });
+
+    // Generate unique filename
+    const filename = `${uuidv4()}.mp3`;
+    const filepath = path.join(audioDir, filename);
+
+    // Save the audio file
     const buffer = Buffer.from(await response.arrayBuffer());
-    const base64Audio = buffer.toString('base64');
-    return `data:audio/mp3;base64,${base64Audio}`;
+    await fs.writeFile(filepath, buffer);
+
+    // Debug logging
+    console.log('Audio file saved:', filepath);
+    console.log('Audio URL path:', `/audio/${filename}`);
+
+    // Return the URL path to the audio file
+    return `/audio/${filename}`;
   } catch (error) {
     console.error('TTS API error:', error);
     return null;
@@ -129,12 +196,12 @@ export async function generateNextSentence(story, theme) {
   داستان قبلی: ${story}
   قوانین:
   - فقط یک جمله‌ی کامل بنویس
-  - جمله باید حداکثر ۱۲۰ کاراکتر باشد
+  - جمله باید حداکثر در ۱۲۰ کاراکتر تمام شود
   - جمله باید به‌طور طبیعی با متن قبلی مرتبط باشد
   - جمله باید داستان را در جهت جذاب‌تری پیش ببرد`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
     max_tokens: 100,

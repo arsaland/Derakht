@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
+import path from 'path';
 import { dirname, join } from 'path';
 import { generateFinalStory, generateOpeningSentence, generateContinuationSentence, generateStoryImage, generateStoryAudio } from './openai.js';
 import cors from 'cors';
@@ -36,11 +37,20 @@ const nsp = io.of('/'); // Default namespace
 app.use(express.json());
 app.use(cors());
 
+app.use(express.static(path.join(__dirname, '../public')));
+app.use('/audio', express.static(path.join(__dirname, '../public/audio')));
+
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; font-src 'self' data: *; style-src 'self' 'unsafe-inline'; img-src 'self' data: *; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+    "default-src 'self'; font-src 'self' data: *; style-src 'self' 'unsafe-inline'; img-src 'self' data: *; media-src 'self' data: *; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
   );
+  next();
+});
+
+app.use('/audio', (req, res, next) => {
+  console.log('Audio request:', req.path);
+  res.set('Content-Type', 'audio/mpeg');
   next();
 });
 
@@ -339,12 +349,20 @@ io.on('connection', (socket) => {
       io.to(roomId).emit('gameState', { ...game });
     }
   });
+
+  socket.on('updateGameFeatures', ({ roomId, features }) => {
+    const game = games.get(roomId);
+    if (game) {
+      game.features = features;
+      io.to(roomId).emit('gameState', { ...game });
+    }
+  });
 });
 
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; font-src 'self' data: *; style-src 'self' 'unsafe-inline'; img-src 'self' data: *; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+    "default-src 'self'; font-src 'self' data: *; style-src 'self' 'unsafe-inline'; img-src 'self' data: *; media-src 'self' data: *; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
   );
   next();
 });
@@ -356,6 +374,42 @@ app.get('/health', (req, res) => {
 
 app.get('/', (req, res) => {
   res.status(200).send('Server is running');
+});
+
+// Clean up old audio files periodically (optional)
+async function cleanupAudioFiles() {
+  try {
+    const audioDir = path.join(process.cwd(), 'public', 'audio');
+    const files = await fs.readdir(audioDir);
+    const now = Date.now();
+    
+    for (const file of files) {
+      const filePath = path.join(audioDir, file);
+      const stats = await fs.stat(filePath);
+      
+      // Delete files older than 1 hour
+      if (now - stats.mtime.getTime() > 3600000) {
+        await fs.unlink(filePath);
+      }
+    }
+  } catch (error) {
+    console.error('Audio cleanup error:', error);
+  }
+}
+
+// Run cleanup every hour
+setInterval(cleanupAudioFiles, 3600000);
+
+// Add this logging middleware for audio requests
+app.use('/audio', (req, res, next) => {
+  console.log('Audio file requested:', req.path);
+  next();
+}, express.static(path.join(process.cwd(), 'public', 'audio')));
+
+// Add error handling for audio files
+app.use('/audio', (err, req, res, next) => {
+  console.error('Error serving audio:', err);
+  res.status(500).send('Error serving audio file');
 });
 
 server.listen(PORT, '0.0.0.0', () => {
