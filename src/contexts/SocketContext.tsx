@@ -13,18 +13,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const SOCKET_URL = import.meta.env.DEV
-      ? `http://${window.location.hostname}:8080`
-      : '';
+    const SOCKET_URL = import.meta.env.PROD
+      ? `http://localhost:8081`
+      : `http://localhost:8081`;
 
     const socketOptions = {
       transports: ['websocket', 'polling'],
       autoConnect: true,
-      path: '/socket.io',
+      path: '/socket.io/',
       reconnection: true,
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      withCredentials: true
+      reconnectionDelay: 1000
     };
 
     const newSocket = io(SOCKET_URL, socketOptions);

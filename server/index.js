@@ -16,13 +16,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production'
-      ? '*'
-      : [
-        'http://localhost:8080',
-        'http://127.0.0.1:8080',
-        `http://${process.env.LOCAL_IP}:8080`
-      ],
+    origin: '*',
     methods: ['GET', 'POST'],
     credentials: true
   },
@@ -67,7 +61,7 @@ if (process.env.NODE_ENV === 'production') {
       }
     }
   }));
-  
+
   app.get('*', (req, res) => {
     res.sendFile(join(__dirname, '../dist/index.html'));
   });
@@ -379,11 +373,11 @@ async function cleanupAudioFiles() {
     const audioDir = path.join(process.cwd(), 'public', 'audio');
     const files = await fs.readdir(audioDir);
     const now = Date.now();
-    
+
     for (const file of files) {
       const filePath = path.join(audioDir, file);
       const stats = await fs.stat(filePath);
-      
+
       // Delete files older than 1 hour
       if (now - stats.mtime.getTime() > 3600000) {
         await fs.unlink(filePath);
