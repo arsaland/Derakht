@@ -14,12 +14,21 @@ export function FinalStory({ show, story, storyImage, storyAudio }: FinalStoryPr
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Story audio URL:', storyAudio);
+  }, [storyAudio]);
+
   const toggleAudio = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play();
+        // Debug logging
+        console.log('Playing audio from:', audioRef.current.src);
+        audioRef.current.play().catch(error => {
+          console.error('Audio playback error:', error);
+        });
       }
       setIsPlaying(!isPlaying);
     }
@@ -59,7 +68,24 @@ export function FinalStory({ show, story, storyImage, storyAudio }: FinalStoryPr
             className="w-full max-w-3xl space-y-4 sm:space-y-8"
           >
             {storyAudio && (
-              <audio ref={audioRef} src={storyAudio} className="hidden" />
+              <>
+                <audio 
+                  ref={audioRef} 
+                  src={storyAudio}
+                  preload="auto"
+                  className="hidden"
+                  onError={(e) => {
+                    console.error('Audio element error:', e.currentTarget.error);
+                    console.error('Audio source:', storyAudio);
+                  }}
+                />
+                <button
+                  onClick={toggleAudio}
+                  className="mx-auto block text-white/60 hover:text-white transition-colors"
+                >
+                  {isPlaying ? 'توقف' : 'پخش صدا'}
+                </button>
+              </>
             )}
 
             {storyImage && (

@@ -27,7 +27,7 @@ export function GameLobby({ players, roomCode, isHost, onStartGame }: GameLobbyP
           <Users size={20} />
           <span>بازیکنان ({players.length})</span>
         </div>
-        
+
         <div className="space-y-2">
           {players.map((player) => (
             <div

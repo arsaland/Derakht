@@ -2,11 +2,39 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSocket } from '../contexts/SocketContext';
 import { useGame } from '../contexts/GameContext';
-import { Share2, Copy, Send } from 'lucide-react';
+import { TreePine, Copy, Send, Share2 } from 'lucide-react';
 import { RoundTransition } from '../components/RoundTransition';
 import { FinalStory } from '../components/FinalStory';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedSentence } from '../components/AnimatedSentence';
+import { GameLobby } from '../components/GameLobby';
+import { debounce } from 'lodash';
+
+const debouncedTypingStart = debounce((socket, roomId) => {
+  socket.emit('typing', { roomId });
+}, 500);
+
+const debouncedTypingEnd = debounce((socket, roomId) => {
+  socket.emit('stopTyping', { roomId });
+}, 100);
+
+interface ToggleProps {
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+  label: string;
+}
+
+export function Toggle({ enabled, onChange, label }: ToggleProps) {
+  return (
+    <button
+      onClick={() => onChange(!enabled)}
+      className={`flex items-center justify-between w-full p-4 rounded-lg border-2 transition-colors
+        ${enabled ? 'border-white bg-white/10' : 'border-white/10 hover:border-white/30'}`}
+    >
+      <span className="text-lg">{label}</span>
+    </button>
+  );
+}
 
 export default function Game() {
   const { roomId } = useParams();
@@ -15,6 +43,7 @@ export default function Game() {
   const { gameState, setGameState, playerName } = useGame();
   const [sentence, setSentence] = useState('');
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!socket || !playerName) {
@@ -28,18 +57,32 @@ export default function Game() {
     return () => {
       socket.off('gameState');
       socket.off('gameError');
+      socket.emit('stopTyping', { roomId });
     };
-  }, [socket, playerName, navigate]);
+  }, [socket, playerName, navigate, roomId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitSentence = (e: React.FormEvent) => {
     e.preventDefault();
     if (!socket || !sentence.trim()) return;
-    socket.emit('submitSentence', { roomId, sentence });
+
+    // Clear typing state before submitting
+    debouncedTypingEnd.cancel();
+    socket.emit('stopTyping', { roomId });
+
+    // Submit the sentence
+    socket.emit('submitSentence', { roomId, sentence: sentence.trim() });
     setSentence('');
   };
 
   const handleStartGame = () => {
     if (!socket) return;
+
+    if (gameState.players.length < 2) {
+      setError('برای شروع بازی حداقل به ۲ بازیکن نیاز است');
+      setTimeout(() => setError(null), 3000); // Clear error after 3 seconds
+      return;
+    }
+
     socket.emit('startGame', { roomId });
   };
 
@@ -74,6 +117,27 @@ export default function Game() {
   const isNewSentence = (index: number) => {
     return index === gameState.sentences.length - 1;
   };
+
+  const handleTypingStart = () => {
+    if (!socket) return;
+    debouncedTypingStart(socket, roomId);
+  };
+
+  const handleTypingEnd = () => {
+    if (!socket) return;
+    debouncedTypingEnd(socket, roomId);
+  };
+
+  // Add cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        socket.emit('typing:end', { roomId });
+        debouncedTypingStart.cancel();
+        debouncedTypingEnd.cancel();
+      }
+    };
+  }, [socket, roomId]);
 
   if (!gameStarted) {
     return (
@@ -127,6 +191,26 @@ export default function Game() {
                   </button>
                 ))}
               </div>
+
+              <div className="space-y-3">
+                <h2 className="text-2xl">ویژگی‌های داستان</h2>
+                <Toggle
+                  enabled={gameState.features?.tts || false}
+                  onChange={(enabled) => socket?.emit('toggleFeature', { roomId, feature: 'tts', enabled })}
+                  label="روایت صوتی داستان"
+                />
+                <Toggle
+                  enabled={gameState.features?.images || false}
+                  onChange={(enabled) => socket?.emit('toggleFeature', { roomId, feature: 'images', enabled })}
+                  label="تصویرسازی داستان"
+                />
+              </div>
+
+              {error && (
+                <p className="text-red-500 text-center animate-fade-in">
+                  {error}
+                </p>
+              )}
               <button
                 onClick={handleStartGame}
                 disabled={!gameState.theme}
@@ -164,17 +248,8 @@ export default function Game() {
       />
 
       <div className="min-h-screen flex flex-col">
-        <div className="flex-1 p-6 pb-32 overflow-auto">
+        <div className="flex-1 p-6 pb-40 overflow-auto">
           <div className="max-w-2xl mx-auto space-y-6">
-            <div className="flex items-center justify-between opacity-60 text-lg">
-              <span>اتاق: {roomId}</span>
-              <span>نوبت: {
-                gameState.currentTurn === 'ai'
-                  ? 'هوش‌یار'
-                  : gameState.players.find(p => p.id === gameState.currentTurn)?.name
-              }</span>
-            </div>
-
             <div className="space-y-4">
               {gameState.sentences.map((text, i) => {
                 const player = gameState.players.find(p => p.sentenceIndices?.includes(i));
@@ -186,7 +261,7 @@ export default function Game() {
                     key={i}
                     className="flex gap-3 text-xl leading-relaxed items-start py-2"
                   >
-                    <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
+                    <span className="whitespace-nowrap font-medium min-w-[100px] text-right text-gray-400">
                       {isAIGenerated ? "هوش‌یار:" : player?.name + ":"}
                     </span>
                     {isLatest ? (
@@ -198,6 +273,17 @@ export default function Game() {
                 );
               })}
             </div>
+
+            {gameState.typingPlayer && gameState.typingPlayer !== socket?.id && (
+              <div className="flex gap-3 text-xl leading-relaxed items-start py-2">
+                <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
+                  {gameState.players.find(p => p.id === gameState.typingPlayer)?.name}:
+                </span>
+                <p className="flex-1 text-gray-400 animate-pulse">
+                  در حال نوشتن...
+                </p>
+              </div>
+            )}
 
             {gameState.currentTurn === 'ai' && (
               <div className="flex gap-3 text-xl leading-relaxed items-start py-2">
@@ -212,36 +298,51 @@ export default function Game() {
 
             {gameState.isProcessing && (
               <p className="text-xl opacity-60 animate-pulse">
-                هوش مصنوعی در حال پردازش داستان است...
+                هوش‌یار در حال پردازش داستان است...
               </p>
             )}
           </div>
         </div>
 
-        {isMyTurn && !gameState.isProcessing && !gameState.showFinalStory && (
-          <form
-            onSubmit={handleSubmit}
-            className="fixed bottom-0 right-0 left-0 p-4 bg-black/90 backdrop-blur border-t border-white/10"
-          >
-            <div className="max-w-2xl mx-auto flex gap-3">
-              <input
-                value={sentence}
-                onChange={(e) => setSentence(e.target.value)}
-                placeholder="جمله‌ی خود را بنویسید..."
-                className="flex-1 bg-white/5 rounded-lg px-4 py-3 text-lg"
-                autoFocus
-              />
-              <button
-                type="submit"
-                disabled={!sentence.trim()}
-                className="p-3 text-white rounded-lg transition-opacity
-                         disabled:opacity-30 enabled:hover:opacity-80"
-              >
-                <Send size={28} />
-              </button>
-            </div>
-          </form>
-        )}
+        <div className="fixed bottom-0 right-0 left-0">
+          <div className="flex items-center justify-between px-4 py-2 text-sm opacity-60 bg-black/50 backdrop-blur border-t border-white/5">
+            <span>اتاق: {roomId}</span>
+            <span>نوبت: {
+              gameState.currentTurn === 'ai'
+                ? 'هوش‌یار'
+                : gameState.players.find(p => p.id === gameState.currentTurn)?.name
+            }</span>
+          </div>
+
+          {isMyTurn && !gameState.isProcessing && !gameState.showFinalStory && (
+            <form
+              onSubmit={handleSubmitSentence}
+              className="p-4 bg-black/90 backdrop-blur border-t border-white/10"
+            >
+              <div className="max-w-2xl mx-auto flex gap-3">
+                <input
+                  value={sentence}
+                  onChange={(e) => {
+                    setSentence(e.target.value);
+                    handleTypingStart();
+                  }}
+                  onBlur={handleTypingEnd}
+                  placeholder="جمله‌ی خود را بنویسید..."
+                  className="flex-1 bg-white/5 rounded-lg px-4 py-3 text-lg"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={!sentence.trim()}
+                  className="p-3 text-white rounded-lg transition-opacity
+                           disabled:opacity-30 enabled:hover:opacity-80"
+                >
+                  <Send size={28} />
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </>
   );

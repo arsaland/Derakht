@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Vazirmatn', 'system-ui', 'sans-serif'],
+        sans: ['Noora', 'system-ui', 'sans-serif'],
       },
     },
   },
