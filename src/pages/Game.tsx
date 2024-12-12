@@ -312,7 +312,6 @@ export default function Game() {
                   onBlur={handleTypingEnd}
                   placeholder="جمله‌ی خود را بنویسید..."
                   className="flex-1 bg-white/5 rounded-lg px-4 py-3 text-lg"
-                  autoFocus
                 />
                 <button
                   type="submit"
