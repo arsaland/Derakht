@@ -168,7 +168,7 @@ export default function Game() {
             </div>
           </div>
 
-          {isHost && (
+          {isHost && gameState.players.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-2xl font-extrabold">انتخاب فضای داستان</h2>
               <div className="grid grid-cols-2 gap-3">
@@ -200,11 +200,6 @@ export default function Game() {
                 />
               </div>
 
-              {error && (
-                <p className="text-red-500 text-center animate-fade-in">
-                  {error}
-                </p>
-              )}
               <button
                 onClick={handleStartGame}
                 disabled={!gameState.theme}
@@ -214,12 +209,6 @@ export default function Game() {
               >
                 شروع بازی
               </button>
-            </div>
-          )}
-
-          {!isHost && gameState.theme && (
-            <div className="text-center space-y-2">
-              <div className="text-3xl">فضای داستان: {gameState.theme}</div>
             </div>
           )}
         </div>
