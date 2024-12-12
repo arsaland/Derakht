@@ -45,8 +45,8 @@ export function GameLobby({ players, roomCode, isHost, onStartGame }: GameLobbyP
         {isHost && (
           <button
             onClick={onStartGame}
-            className="w-full mt-6 py-3 text-lg font-medium text-black bg-white 
-                     hover:bg-gray-100 transition-colors duration-200"
+            className="block w-full text-2xl py-4 px-8 font-extrabold underline decoration-[#183715] underline-offset-4 
+                       text-white hover:text-[#183715] transition-colors duration-200"
           >
             شروع بازی
           </button>

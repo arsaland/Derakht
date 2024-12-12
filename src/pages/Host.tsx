@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../contexts/SocketContext';
 import { useGame } from '../contexts/GameContext';
-import { TreePine, ArrowRight } from 'lucide-react';
 
 export default function Host() {
   const navigate = useNavigate();
@@ -23,7 +22,11 @@ export default function Host() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 space-y-12">
       <div className="text-center space-y-4">
-        <TreePine size={48} className="mx-auto" />
+        <img
+          src="/fonts/derakht-icon.png"
+          alt="درخت"
+          className="h-12 mx-auto"
+        />
         <h1 className="text-3xl font-bold">میزبانی بازی جدید</h1>
       </div>
 

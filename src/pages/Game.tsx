@@ -138,9 +138,9 @@ export default function Game() {
       <div className="min-h-screen p-6 space-y-8">
         <div className="max-w-lg mx-auto space-y-8">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold">لابی بازی</h1>
+            <h1 className="text-4xl font-extrabold">اتاق بازی</h1>
             <div className="flex items-center justify-center gap-4">
-              <span className="text-xl opacity-60">کد اتاق: {roomId}</span>
+              <span className="text-2xl font-bold">کد اتاق: {roomId}</span>
               <button onClick={shareRoomCode} className="opacity-60 hover:opacity-100">
                 <Share2 size={24} />
               </button>
@@ -159,7 +159,7 @@ export default function Game() {
                   key={player.id}
                   className="flex items-center justify-between p-4 bg-white/5 rounded-lg"
                 >
-                  <span className="text-xl font-extrabold">{player.name}</span>
+                  <span className="text-xl font-bold">{player.name}</span>
                   {player.isHost && (
                     <span className="text-sm opacity-60">میزبان</span>
                   )}
@@ -181,7 +181,7 @@ export default function Game() {
                         ? 'border-[#183715] bg-[#183715]/10'
                         : 'border-[#183715]/30 hover:border-[#183715] hover:bg-[#183715]/5'}`}
                   >
-                    <div className="text-lg">{theme}</div>
+                    <div className="text-lg font-medium">{theme}</div>
                   </button>
                 ))}
               </div>
@@ -191,12 +191,12 @@ export default function Game() {
                 <Toggle
                   enabled={gameState.features?.tts || false}
                   onChange={(enabled) => socket?.emit('toggleFeature', { roomId, feature: 'tts', enabled })}
-                  label="روایت صوتی داستان"
+                  label={<span className="font-medium">روایت صوتی داستان</span>}
                 />
                 <Toggle
                   enabled={gameState.features?.images || false}
                   onChange={(enabled) => socket?.emit('toggleFeature', { roomId, feature: 'images', enabled })}
-                  label="تصویرسازی داستان"
+                  label={<span className="font-medium">تصویرسازی داستان</span>}
                 />
               </div>
 
@@ -208,8 +208,8 @@ export default function Game() {
               <button
                 onClick={handleStartGame}
                 disabled={!gameState.theme}
-                className="w-full py-4 text-xl font-medium text-black bg-white 
-                         hover:bg-gray-100 transition-colors duration-200 rounded-lg
+                className="block w-full text-2xl py-4 px-8 font-extrabold underline decoration-[#183715] underline-offset-4 
+                         text-white hover:text-[#183715] transition-colors duration-200
                          disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 شروع بازی
@@ -253,9 +253,9 @@ export default function Game() {
                 return (
                   <div
                     key={i}
-                    className="flex gap-3 text-xl leading-relaxed items-start py-2"
+                    className="flex gap-3 text-base leading-relaxed items-start py-2"
                   >
-                    <span className="whitespace-nowrap font-medium min-w-[100px] text-right text-[#183715]">
+                    <span className="whitespace-nowrap font-bold min-w-[100px] text-right text-[#183715]">
                       {isAIGenerated ? "هوش‌یار:" : player?.name + ":"}
                     </span>
                     {isLatest ? (
@@ -269,8 +269,8 @@ export default function Game() {
             </div>
 
             {gameState.typingPlayer && gameState.typingPlayer !== socket?.id && (
-              <div className="flex gap-3 text-xl leading-relaxed items-start py-2">
-                <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-[#183715]">
+              <div className="flex gap-3 text-base leading-relaxed items-start py-2">
+                <span className="whitespace-nowrap font-bold min-w-[100px] text-left text-[#183715]">
                   {gameState.players.find(p => p.id === gameState.typingPlayer)?.name}:
                 </span>
                 <p className="flex-1 text-gray-400 animate-pulse">
@@ -280,7 +280,7 @@ export default function Game() {
             )}
 
             {gameState.currentTurn === 'ai' && (
-              <div className="flex gap-3 text-xl leading-relaxed items-start py-2">
+              <div className="flex gap-3 text-base leading-relaxed items-start py-2">
                 <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
                   هوش‌یار:
                 </span>
@@ -338,6 +338,25 @@ export default function Game() {
           )}
         </div>
       </div>
+
+      {gameState.roundTransition && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur z-50">
+          <div className="text-center space-y-8">
+            <h2 className="text-7xl font-extrabold">
+              {gameState.round === 1 && 'مقدمه'}
+              {gameState.round === 2 && 'گسترش'}
+              {gameState.round === 3 && 'اوج'}
+              {gameState.round === 4 && 'پایان'}
+            </h2>
+            <p className="text-xl text-white/60">
+              {gameState.round === 1 ? 'داستان را شروع کنید' : null}
+              {gameState.round === 2 ? 'داستان را گسترش دهید' : null}
+              {gameState.round === 3 ? 'داستان را به اوج برسانید' : null}
+              {gameState.round === 4 ? 'داستان را به پایان برسانید' : null}
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
