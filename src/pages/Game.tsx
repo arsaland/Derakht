@@ -255,7 +255,7 @@ export default function Game() {
                     key={i}
                     className="flex gap-3 text-xl leading-relaxed items-start py-2"
                   >
-                    <span className="whitespace-nowrap font-medium min-w-[100px] text-right text-gray-400">
+                    <span className="whitespace-nowrap font-medium min-w-[100px] text-right text-[#183715]">
                       {isAIGenerated ? "هوش‌یار:" : player?.name + ":"}
                     </span>
                     {isLatest ? (
@@ -270,7 +270,7 @@ export default function Game() {
 
             {gameState.typingPlayer && gameState.typingPlayer !== socket?.id && (
               <div className="flex gap-3 text-xl leading-relaxed items-start py-2">
-                <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-gray-400">
+                <span className="whitespace-nowrap font-medium min-w-[100px] text-left text-[#183715]">
                   {gameState.players.find(p => p.id === gameState.typingPlayer)?.name}:
                 </span>
                 <p className="flex-1 text-gray-400 animate-pulse">

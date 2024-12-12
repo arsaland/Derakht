@@ -42,7 +42,7 @@ export function GameRoom({ story, playerId, onSubmitSentence }: GameRoomProps) {
           {story.sentences.map((text, index) => (
             <p
               key={index}
-              className={`text-lg leading-relaxed ${index === 0 ? 'text-gray-400' : 'text-white'
+              className={`text-base leading-relaxed ${index === 0 ? 'text-gray-400' : 'text-white'
                 }`}
             >
               {text}
