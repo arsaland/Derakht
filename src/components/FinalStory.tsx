@@ -69,8 +69,8 @@ export function FinalStory({ show, story, storyImage, storyAudio }: FinalStoryPr
           >
             {storyAudio && (
               <>
-                <audio 
-                  ref={audioRef} 
+                <audio
+                  ref={audioRef}
                   src={storyAudio}
                   preload="auto"
                   className="hidden"

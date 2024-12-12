@@ -42,7 +42,7 @@ export async function generateFinalStory(sentences) {
     // If content policy violation, try sanitizing and regenerating
     if (error?.error?.code === 'content_policy_violation') {
       console.log('Content policy violation detected, attempting to sanitize...');
-      
+
       // Sanitize the content
       const sanitizeResponse = await openai.chat.completions.create({
         model: "gpt-4",
@@ -68,7 +68,7 @@ export async function generateFinalStory(sentences) {
       const finalResponse = await attemptStoryGeneration(sanitizeResponse.choices[0].message.content);
       return finalResponse.choices[0].message.content;
     }
-    
+
     // If other error, fallback to original sentences
     console.error('OpenAI API error:', error);
     return sentences.join("\n");
@@ -83,14 +83,18 @@ export async function generateOpeningSentence(theme) {
   - جمله باید جذاب و گیرا باشد
   - جمله باید در یک نقطه‌ی طبیعی تمام شود`;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0.7,
-    max_tokens: 100,
-  });
-
-  return response.choices[0].message.content.trim();
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 100,
+    });
+    return response.choices[0].message.content.trim();
+  } catch (error) {
+    console.error('OpenAI API Error:', error.message, error.status);
+    throw error;
+  }
 }
 
 export async function generateContinuationSentence(sentences) {

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedSentence } from '../components/AnimatedSentence';
 import { GameLobby } from '../components/GameLobby';
 import { debounce } from 'lodash';
+import { Toggle } from '../components/Toggle';
 
 const debouncedTypingStart = debounce((socket, roomId) => {
   socket.emit('typing', { roomId });
@@ -18,23 +19,7 @@ const debouncedTypingEnd = debounce((socket, roomId) => {
   socket.emit('stopTyping', { roomId });
 }, 100);
 
-interface ToggleProps {
-  enabled: boolean;
-  onChange: (enabled: boolean) => void;
-  label: string;
-}
-
-export function Toggle({ enabled, onChange, label }: ToggleProps) {
-  return (
-    <button
-      onClick={() => onChange(!enabled)}
-      className={`flex items-center justify-between w-full p-4 rounded-lg border-2 transition-colors
-        ${enabled ? 'border-white bg-white/10' : 'border-white/10 hover:border-white/30'}`}
-    >
-      <span className="text-lg">{label}</span>
-    </button>
-  );
-}
+const MAX_PLAYERS = 8;
 
 export default function Game() {
   const { roomId } = useParams();
@@ -52,7 +37,11 @@ export default function Game() {
     }
 
     socket.on('gameState', setGameState);
-    socket.on('gameError', () => navigate('/'));
+    socket.on('gameError', (error) => {
+      console.error('Game error:', error);
+      setError(error.message);
+      setTimeout(() => setError(null), 3000);
+    });
 
     return () => {
       socket.off('gameState');
@@ -76,12 +65,6 @@ export default function Game() {
 
   const handleStartGame = () => {
     if (!socket) return;
-
-    if (gameState.players.length < 2) {
-      setError('برای شروع بازی حداقل به ۲ بازیکن نیاز است');
-      setTimeout(() => setError(null), 3000); // Clear error after 3 seconds
-      return;
-    }
 
     socket.emit('startGame', { roomId });
   };
@@ -139,6 +122,17 @@ export default function Game() {
     };
   }, [socket, roomId]);
 
+  if (gameState.showFinalStory) {
+    navigate('/final-story', {
+      state: {
+        story: gameState.finalStory,
+        storyImage: gameState.storyImage,
+        storyAudio: gameState.storyAudio
+      }
+    });
+    return null;
+  }
+
   if (!gameStarted) {
     return (
       <div className="min-h-screen p-6 space-y-8">
@@ -158,14 +152,14 @@ export default function Game() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-2xl">بازیکنان ({gameState.players.length})</h2>
+            <h2 className="text-2xl font-extrabold">بازیکنان ({gameState.players.length})</h2>
             <div className="space-y-3">
               {gameState.players.map((player) => (
                 <div
                   key={player.id}
                   className="flex items-center justify-between p-4 bg-white/5 rounded-lg"
                 >
-                  <span className="text-xl">{player.name}</span>
+                  <span className="text-xl font-extrabold">{player.name}</span>
                   {player.isHost && (
                     <span className="text-sm opacity-60">میزبان</span>
                   )}
@@ -176,7 +170,7 @@ export default function Game() {
 
           {isHost && (
             <div className="space-y-4">
-              <h2 className="text-2xl">انتخاب فضای داستان</h2>
+              <h2 className="text-2xl font-extrabold">انتخاب فضای داستان</h2>
               <div className="grid grid-cols-2 gap-3">
                 {Object.keys(THEMES).map((theme) => (
                   <button
@@ -184,8 +178,8 @@ export default function Game() {
                     onClick={() => socket?.emit('selectTheme', { roomId, theme })}
                     className={`p-4 rounded-lg border-2 transition-colors
                       ${gameState.theme === theme
-                        ? 'border-white bg-white/10'
-                        : 'border-white/10 hover:border-white/30'}`}
+                        ? 'border-[#183715] bg-[#183715]/10'
+                        : 'border-[#183715]/30 hover:border-[#183715] hover:bg-[#183715]/5'}`}
                   >
                     <div className="text-lg">{theme}</div>
                   </button>
@@ -193,7 +187,7 @@ export default function Game() {
               </div>
 
               <div className="space-y-3">
-                <h2 className="text-2xl">ویژگی‌های داستان</h2>
+                <h2 className="text-2xl font-extrabold">ویژگی‌های داستان</h2>
                 <Toggle
                   enabled={gameState.features?.tts || false}
                   onChange={(enabled) => socket?.emit('toggleFeature', { roomId, feature: 'tts', enabled })}

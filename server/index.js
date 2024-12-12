@@ -67,7 +67,7 @@ if (process.env.NODE_ENV === 'production') {
       }
     }
   }));
-  
+
   app.get('*', (req, res) => {
     res.sendFile(join(__dirname, '../dist/index.html'));
   });
@@ -147,11 +147,6 @@ io.on('connection', (socket) => {
   socket.on('startGame', async ({ roomId }) => {
     const game = games.get(roomId);
     if (!game || !game.theme) return;
-
-    if (game.players.length < MIN_PLAYERS) {
-      io.to(roomId).emit('gameError', 'Need at least 2 players to start');
-      return;
-    }
 
     if (game.players.length > MAX_PLAYERS) {
       io.to(roomId).emit('gameError', 'Maximum 8 players allowed');
@@ -379,11 +374,11 @@ async function cleanupAudioFiles() {
     const audioDir = path.join(process.cwd(), 'public', 'audio');
     const files = await fs.readdir(audioDir);
     const now = Date.now();
-    
+
     for (const file of files) {
       const filePath = path.join(audioDir, file);
       const stats = await fs.stat(filePath);
-      
+
       // Delete files older than 1 hour
       if (now - stats.mtime.getTime() > 3600000) {
         await fs.unlink(filePath);

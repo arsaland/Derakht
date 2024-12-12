@@ -27,35 +27,34 @@ export default function Host() {
         <h1 className="text-3xl font-bold">میزبانی بازی جدید</h1>
       </div>
 
-      <form onSubmit={handleHost} className="w-full max-w-sm space-y-8">
+      <form onSubmit={handleHost} className="w-full max-w-sm">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="نام شما"
-          className="text-xl"
+          className="text-xl w-full mb-12"
           autoFocus
         />
-        
-        <div className="space-y-4">
+
+        <nav className="space-y-6 text-center">
           <button
             type="submit"
-            className="w-full py-4 text-xl font-medium text-black bg-white 
-                     hover:bg-gray-100 transition-colors duration-200 rounded-lg"
+            className="block w-full text-2xl py-4 px-8 font-extrabold underline decoration-[#183715] underline-offset-4 
+                     text-white hover:text-[#183715] transition-colors duration-200"
           >
             شروع بازی
           </button>
-          
+
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="w-full py-3 text-lg opacity-60 hover:opacity-100 
-                     transition-opacity duration-200 flex items-center justify-center gap-2"
+            className="block w-full text-xl py-3 px-6 font-extrabold underline decoration-[#183715] underline-offset-4 
+                     text-white/60 hover:text-[#183715] transition-colors duration-200"
           >
-            <ArrowRight size={20} />
-            <span>بازگشت</span>
+            بازگشت
           </button>
-        </div>
+        </nav>
       </form>
     </div>
   );
