@@ -61,6 +61,9 @@ export default function Game() {
     // Submit the sentence
     socket.emit('submitSentence', { roomId, sentence: sentence.trim() });
     setSentence('');
+
+    // Blur the input to close mobile keyboard
+    (document.activeElement as HTMLElement)?.blur();
   };
 
   const handleStartGame = () => {
