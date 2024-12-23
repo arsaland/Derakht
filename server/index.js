@@ -361,7 +361,7 @@ app.use((req, res, next) => {
 
 // Add this before your other routes
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy' });
+  res.status(200).type('text/plain').send('OK');
 });
 
 app.get('/', (req, res) => {
